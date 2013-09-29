@@ -25,13 +25,11 @@ public final class FabulousPlayer extends SampleGamer {
 	
 	private int bestScore = -1;
 	
-	private StateMachine theMachine = getStateMachine();
-	
 	@Override
 	public Move stateMachineSelectMove(long timeout) throws TransitionDefinitionException, MoveDefinitionException, GoalDefinitionException{
 		if(best == null || best.isEmpty()){
 			System.err.println("No moves.");
-			theMachine.getRandomMove(getCurrentState(), getRole());
+			getStateMachine().getRandomMove(getCurrentState(), getRole());
 		}
 		return best.pop();
 	}
@@ -42,13 +40,15 @@ public final class FabulousPlayer extends SampleGamer {
 		int depth = 4;
 		long now = System.currentTimeMillis();
 		long estimate;
-		while(! search(theMachine.getInitialState(), depth)){
+		StateMachine theMachine = getStateMachine();
+		while(! search(theMachine, theMachine.getInitialState(), depth)){
 			estimate = 2 * (System.currentTimeMillis() - now);
 			now = System.currentTimeMillis();
 			if(now + estimate > timeout){
 				break;
 			}
 			depth++;
+			//System.out.println("Searching with depth " + depth);
 		}
 		if(best == null){
 			return;
@@ -63,11 +63,12 @@ public final class FabulousPlayer extends SampleGamer {
 	/**
 	 * Limited depth first search.
 	 * 
+	 * @param theMachine State Machine of the game
 	 * @param state State to start the search from
 	 * @param depth Depth limit
 	 * @return True if further search is pointless
 	 */
-	private boolean search(MachineState state, int depth){
+	private boolean search(StateMachine theMachine, MachineState state, int depth){
 		if(theMachine.isTerminal(state)){
 			int score = -1;
 			try {
@@ -97,7 +98,7 @@ public final class FabulousPlayer extends SampleGamer {
 			List<Move> list = new LinkedList<Move>();
 			list.add(m);
 			try {
-				if(search(theMachine.getNextState(state, list), --depth)){
+				if(search(theMachine, theMachine.getNextState(state, list), --depth)){
 					return true;
 				}
 			} catch (TransitionDefinitionException e) {
