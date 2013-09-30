@@ -34,7 +34,7 @@ public final class FabulousPlayer extends SampleGamer {
 	@Override
 	public Move stateMachineSelectMove(long timeout) throws TransitionDefinitionException, MoveDefinitionException, GoalDefinitionException{
 		if(best == null || best.isEmpty()){
-			System.err.println("No moves.");
+			System.err.println("No best solution, performing random move.");
 			return getStateMachine().getRandomMove(getCurrentState(), getRole());
 		}
 		return best.pop();
@@ -47,15 +47,15 @@ public final class FabulousPlayer extends SampleGamer {
 		current = new Stack<Move>();
 		timeout -= 200;
 		int depth = 4;
-		long now = System.currentTimeMillis();
+		//long now = System.currentTimeMillis();
 		//long estimate;
 		StateMachine theMachine = getStateMachine();
 		seen = new HashSet<MachineState>();
 		nodeCount = 0;
 		while(! search(theMachine, theMachine.getInitialState(), depth, timeout)){
 			//estimate = 2 * (System.currentTimeMillis() - now);
-			now = System.currentTimeMillis();
-			if(now > timeout){
+			//now = System.currentTimeMillis();
+			if(System.currentTimeMillis() > timeout){
 				break;
 			}
 			depth++;
@@ -126,7 +126,7 @@ public final class FabulousPlayer extends SampleGamer {
 				}
 			} catch (TransitionDefinitionException e) {
 				System.err.println("Something went horribly wrong!");
-				System.exit(-1);
+				return true;
 			}
 			current.pop();
 		}
