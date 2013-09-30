@@ -1,7 +1,9 @@
 package org.ggp.base.player.gamer.statemachine.sample;
 
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
 import java.util.Stack;
 
 import org.ggp.base.util.statemachine.MachineState;
@@ -19,36 +21,42 @@ import org.ggp.base.util.statemachine.exceptions.TransitionDefinitionException;
  */
 public final class FabulousPlayer extends SampleGamer {
 	
-	private Stack<Move> best = null;
+	private Stack<Move> best;
 	
-	private Stack<Move> current = new Stack<Move>();
+	private Stack<Move> current;
 	
-	private int bestScore = -1;
+	private int bestScore;
+	
+	private Set<MachineState> seen;
 	
 	@Override
 	public Move stateMachineSelectMove(long timeout) throws TransitionDefinitionException, MoveDefinitionException, GoalDefinitionException{
 		if(best == null || best.isEmpty()){
 			System.err.println("No moves.");
-			getStateMachine().getRandomMove(getCurrentState(), getRole());
+			return getStateMachine().getRandomMove(getCurrentState(), getRole());
 		}
 		return best.pop();
 	}
 	
 	@Override
 	public void stateMachineMetaGame(long timeout){
-		timeout -= 500;
+		best = null;
+		bestScore = -1;
+		current = new Stack<Move>();
+		timeout -= 1000;
 		int depth = 4;
 		long now = System.currentTimeMillis();
-		long estimate;
+		//long estimate;
 		StateMachine theMachine = getStateMachine();
+		seen = new HashSet<MachineState>();
 		while(! search(theMachine, theMachine.getInitialState(), depth)){
-			estimate = 2 * (System.currentTimeMillis() - now);
+			//estimate = 2 * (System.currentTimeMillis() - now);
 			now = System.currentTimeMillis();
-			if(now + estimate > timeout){
+			if(now > timeout){
 				break;
 			}
 			depth++;
-			//System.out.println("Searching with depth " + depth);
+			seen = new HashSet<MachineState>();
 		}
 		if(best == null){
 			return;
@@ -69,6 +77,10 @@ public final class FabulousPlayer extends SampleGamer {
 	 * @return True if further search is pointless
 	 */
 	private boolean search(StateMachine theMachine, MachineState state, int depth){
+		if(seen.contains(state)){
+			return false;
+		}
+		seen.add(state);
 		if(theMachine.isTerminal(state)){
 			int score = -1;
 			try {
