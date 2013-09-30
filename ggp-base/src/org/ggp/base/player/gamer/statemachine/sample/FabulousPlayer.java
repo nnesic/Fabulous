@@ -133,9 +133,4 @@ public final class FabulousPlayer extends SampleGamer {
 		return false;
 	}
 	
-	@Override
-	public void stateMachineStop(){
-		//TODO: Implement something or remove
-	}
-	
 }
