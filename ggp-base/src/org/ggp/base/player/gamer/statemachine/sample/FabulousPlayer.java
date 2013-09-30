@@ -98,7 +98,7 @@ public final class FabulousPlayer extends SampleGamer {
 			List<Move> list = new LinkedList<Move>();
 			list.add(m);
 			try {
-				if(search(theMachine, theMachine.getNextState(state, list), --depth)){
+				if(search(theMachine, theMachine.getNextState(state, list), depth - 1)){
 					return true;
 				}
 			} catch (TransitionDefinitionException e) {
