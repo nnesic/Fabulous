@@ -21,6 +21,10 @@ import org.ggp.base.util.statemachine.exceptions.TransitionDefinitionException;
  */
 public final class FabulousPlayer extends SampleGamer {
 	
+	private static final int MAX_SCORE = 100;
+	
+	private static final int MIN_SCORE = 0;
+	
 	private Deque<Move> best;
 	
 	private Deque<Move> current;
@@ -34,7 +38,7 @@ public final class FabulousPlayer extends SampleGamer {
 	@Override
 	public Move stateMachineSelectMove(long timeout) throws TransitionDefinitionException, MoveDefinitionException, GoalDefinitionException{
 		if(best == null || best.isEmpty()){
-			System.err.println("No best solution, performing random move.");
+			System.out.println("No best solution, performing random move.");
 			return getStateMachine().getRandomMove(getCurrentState(), getRole());
 		}
 		return best.removeFirst();
@@ -43,7 +47,7 @@ public final class FabulousPlayer extends SampleGamer {
 	@Override
 	public void stateMachineMetaGame(long timeout){
 		best = null;
-		bestScore = -1;
+		bestScore = MIN_SCORE - 1;
 		current = new ArrayDeque<Move>();
 		timeout -= 200;
 		int depth = 4;
@@ -85,7 +89,7 @@ public final class FabulousPlayer extends SampleGamer {
 		}
 		seen.add(state);
 		if(theMachine.isTerminal(state)){
-			int score = -1;
+			int score = MIN_SCORE - 1;
 			try {
 				score = theMachine.getGoal(state, getRole());
 			} catch (GoalDefinitionException e) {
@@ -96,7 +100,7 @@ public final class FabulousPlayer extends SampleGamer {
 				best = new ArrayDeque<Move>();
 				best.addAll(current);
 			}
-			return (score == 100);
+			return (score == MAX_SCORE);
 		}
 		if(depth == 0){
 			return false;
