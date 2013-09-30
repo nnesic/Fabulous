@@ -1,11 +1,11 @@
 package org.ggp.base.player.gamer.statemachine.sample;
 
+import java.util.ArrayDeque;
+import java.util.Deque;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
-import java.util.Stack;
-
 import org.ggp.base.util.statemachine.MachineState;
 import org.ggp.base.util.statemachine.Move;
 import org.ggp.base.util.statemachine.StateMachine;
@@ -21,9 +21,9 @@ import org.ggp.base.util.statemachine.exceptions.TransitionDefinitionException;
  */
 public final class FabulousPlayer extends SampleGamer {
 	
-	private Stack<Move> best;
+	private Deque<Move> best;
 	
-	private Stack<Move> current;
+	private Deque<Move> current;
 	
 	private int bestScore;
 	
@@ -37,14 +37,14 @@ public final class FabulousPlayer extends SampleGamer {
 			System.err.println("No best solution, performing random move.");
 			return getStateMachine().getRandomMove(getCurrentState(), getRole());
 		}
-		return best.pop();
+		return best.removeFirst();
 	}
 	
 	@Override
 	public void stateMachineMetaGame(long timeout){
 		best = null;
 		bestScore = -1;
-		current = new Stack<Move>();
+		current = new ArrayDeque<Move>();
 		timeout -= 200;
 		int depth = 4;
 		//long now = System.currentTimeMillis();
@@ -62,14 +62,6 @@ public final class FabulousPlayer extends SampleGamer {
 			seen = new HashSet<MachineState>();
 			nodeCount = 0;
 		}
-		if(best == null){
-			return;
-		}
-		Stack<Move> copy = new Stack<Move>();
-		while(! best.isEmpty()){
-			copy.push(best.pop());
-		}
-		best = copy;
 	}
 	
 	/**
@@ -101,7 +93,7 @@ public final class FabulousPlayer extends SampleGamer {
 				return true;
 			}
 			if(score > bestScore){
-				best = new Stack<Move>();
+				best = new ArrayDeque<Move>();
 				best.addAll(current);
 			}
 			return (score == 100);
@@ -117,7 +109,7 @@ public final class FabulousPlayer extends SampleGamer {
 			return true;
 		}
 		for(Move m : moves){
-			current.push(m);
+			current.addLast(m);
 			List<Move> list = new LinkedList<Move>();
 			list.add(m);
 			try {
@@ -128,7 +120,7 @@ public final class FabulousPlayer extends SampleGamer {
 				System.err.println("Something went horribly wrong!");
 				return true;
 			}
-			current.pop();
+			current.removeLast();
 		}
 		return false;
 	}
