@@ -27,6 +27,8 @@ public final class FabulousPlayer extends SampleGamer {
 	
 	private int bestScore;
 	
+	private int nodeCount;
+	
 	private Set<MachineState> seen;
 	
 	@Override
@@ -43,13 +45,14 @@ public final class FabulousPlayer extends SampleGamer {
 		best = null;
 		bestScore = -1;
 		current = new Stack<Move>();
-		timeout -= 1000;
+		timeout -= 200;
 		int depth = 4;
 		long now = System.currentTimeMillis();
 		//long estimate;
 		StateMachine theMachine = getStateMachine();
 		seen = new HashSet<MachineState>();
-		while(! search(theMachine, theMachine.getInitialState(), depth)){
+		nodeCount = 0;
+		while(! search(theMachine, theMachine.getInitialState(), depth, timeout)){
 			//estimate = 2 * (System.currentTimeMillis() - now);
 			now = System.currentTimeMillis();
 			if(now > timeout){
@@ -57,6 +60,7 @@ public final class FabulousPlayer extends SampleGamer {
 			}
 			depth++;
 			seen = new HashSet<MachineState>();
+			nodeCount = 0;
 		}
 		if(best == null){
 			return;
@@ -74,9 +78,16 @@ public final class FabulousPlayer extends SampleGamer {
 	 * @param theMachine State Machine of the game
 	 * @param state State to start the search from
 	 * @param depth Depth limit
+	 * @param timeout Time limit
 	 * @return True if further search is pointless
 	 */
-	private boolean search(StateMachine theMachine, MachineState state, int depth){
+	private boolean search(StateMachine theMachine, MachineState state, int depth, long timeout){
+		if(++nodeCount > 500){
+			if(System.currentTimeMillis() > timeout){
+				return true;
+			}
+			nodeCount = 0;
+		}
 		if(seen.contains(state)){
 			return false;
 		}
@@ -110,7 +121,7 @@ public final class FabulousPlayer extends SampleGamer {
 			List<Move> list = new LinkedList<Move>();
 			list.add(m);
 			try {
-				if(search(theMachine, theMachine.getNextState(state, list), depth - 1)){
+				if(search(theMachine, theMachine.getNextState(state, list), depth - 1, timeout)){
 					return true;
 				}
 			} catch (TransitionDefinitionException e) {
