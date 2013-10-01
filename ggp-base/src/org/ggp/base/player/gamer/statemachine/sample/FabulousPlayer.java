@@ -25,6 +25,8 @@ public final class FabulousPlayer extends SampleGamer {
 	
 	private static final int MIN_SCORE = 0;
 	
+	private boolean useHash = true;
+	
 	private Deque<Move> best;
 	
 	private Deque<Move> current;
@@ -84,10 +86,9 @@ public final class FabulousPlayer extends SampleGamer {
 			}
 			nodeCount = 0;
 		}
-		if(seen.containsKey(state) && seen.get(state) >= depth){
+		if(useHash && hashCheck(state, depth)){
 			return false;
 		}
-		seen.put(state, depth);
 		if(theMachine.isTerminal(state)){
 			int score = MIN_SCORE - 1;
 			try {
@@ -126,6 +127,21 @@ public final class FabulousPlayer extends SampleGamer {
 			}
 			current.removeLast();
 		}
+		return false;
+	}
+	
+	/**
+	 * Check if a state has been seen further up in the tree and adds it if not.
+	 * 
+	 * @param state MachineState
+	 * @param depth Depth value in the game tree (counting backwards)
+	 * @return True if the state was already added in a more favorable position
+	 */
+	private boolean hashCheck(MachineState state, int depth){
+		if(seen.containsKey(state) && seen.get(state) >= depth){
+			return true;
+		}
+		seen.put(state, depth);
 		return false;
 	}
 	
