@@ -2,10 +2,11 @@ package org.ggp.base.player.gamer.statemachine.sample;
 
 import java.util.ArrayDeque;
 import java.util.Deque;
-import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
+import org.apache.commons.collections4.map.AbstractReferenceMap;
+import org.apache.commons.collections4.map.AbstractReferenceMap.ReferenceStrength;
+import org.apache.commons.collections4.map.ReferenceMap;
 import org.ggp.base.util.statemachine.MachineState;
 import org.ggp.base.util.statemachine.Move;
 import org.ggp.base.util.statemachine.StateMachine;
@@ -25,7 +26,7 @@ public final class FabulousPlayer extends SampleGamer {
 	
 	private static final int MIN_SCORE = 0;
 	
-	private boolean useHash = true;
+	private static final ReferenceStrength soft = AbstractReferenceMap.ReferenceStrength.SOFT;
 	
 	private Deque<Move> best;
 	
@@ -35,7 +36,7 @@ public final class FabulousPlayer extends SampleGamer {
 	
 	private int nodeCount;
 	
-	private Map<MachineState, Integer> seen;
+	private ReferenceMap<MachineState, Integer> seen;
 	
 	@Override
 	public Move stateMachineSelectMove(long timeout) throws TransitionDefinitionException, MoveDefinitionException, GoalDefinitionException{
@@ -52,29 +53,20 @@ public final class FabulousPlayer extends SampleGamer {
 		bestScore = MIN_SCORE - 1;
 		current = new ArrayDeque<Move>();
 		timeout -= 200;
-		int depth = 2;
+		int depth = 1;
 		//long now = System.currentTimeMillis();
 		//long estimate;
 		StateMachine theMachine = getStateMachine();
-		seen = new HashMap<MachineState, Integer>();
+		seen = new ReferenceMap<MachineState, Integer>(soft, soft);
 		nodeCount = 0;
-		boolean found = search(theMachine, theMachine.getInitialState(), depth - 1, timeout);
-		while(! found){
-			try{
-				found = search(theMachine, theMachine.getInitialState(), depth, timeout);
-			} catch (OutOfMemoryError e){
-				seen = null;
-				System.gc();
-				useHash = false;
-				continue;
-			}
+		while(! search(theMachine, theMachine.getInitialState(), depth, timeout)){
 			//estimate = 2 * (System.currentTimeMillis() - now);
 			//now = System.currentTimeMillis();
 			if(System.currentTimeMillis() > timeout){
 				break;
 			}
 			depth++;
-			seen = new HashMap<MachineState, Integer>();
+			seen = new ReferenceMap<MachineState, Integer>(soft, soft);
 			nodeCount = 0;
 		}
 	}
@@ -95,7 +87,7 @@ public final class FabulousPlayer extends SampleGamer {
 			}
 			nodeCount = 0;
 		}
-		if(useHash && hashCheck(state, depth)){
+		if(hashCheck(state, depth)){
 			return false;
 		}
 		if(theMachine.isTerminal(state)){

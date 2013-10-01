@@ -20,6 +20,7 @@
         <pathelement location="src/external/Jython/jython.jar"/>
         <pathelement location="src/external/Clojure/clojure.jar"/>
     	<pathelement location="junit/junit-4.11.jar"/>
+    	<pathelement location="junit/commons-collections4-4.0-alpha1.jar"/>
     </path>
     <target name="init">
         <mkdir dir="bin"/>
