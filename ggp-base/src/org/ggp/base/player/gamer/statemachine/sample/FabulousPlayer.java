@@ -52,13 +52,22 @@ public final class FabulousPlayer extends SampleGamer {
 		bestScore = MIN_SCORE - 1;
 		current = new ArrayDeque<Move>();
 		timeout -= 200;
-		int depth = 4;
+		int depth = 2;
 		//long now = System.currentTimeMillis();
 		//long estimate;
 		StateMachine theMachine = getStateMachine();
 		seen = new HashMap<MachineState, Integer>();
 		nodeCount = 0;
-		while(! search(theMachine, theMachine.getInitialState(), depth, timeout)){
+		boolean found = search(theMachine, theMachine.getInitialState(), depth - 1, timeout);
+		while(! found){
+			try{
+				found = search(theMachine, theMachine.getInitialState(), depth, timeout);
+			} catch (OutOfMemoryError e){
+				seen = null;
+				System.gc();
+				useHash = false;
+				continue;
+			}
 			//estimate = 2 * (System.currentTimeMillis() - now);
 			//now = System.currentTimeMillis();
 			if(System.currentTimeMillis() > timeout){
