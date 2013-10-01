@@ -49,6 +49,7 @@ public final class FabulousPlayer extends SampleGamer {
 	
 	@Override
 	public void stateMachineMetaGame(long timeout){
+		long total = System.currentTimeMillis();
 		best = null;
 		bestScore = MIN_SCORE - 1;
 		current = new ArrayDeque<Move>();
@@ -69,6 +70,8 @@ public final class FabulousPlayer extends SampleGamer {
 			seen = new ReferenceMap<MachineState, Integer>(soft, soft);
 			nodeCount = 0;
 		}
+		total = System.currentTimeMillis() - total;
+		System.out.println("Search took " + total + "ms.");
 	}
 	
 	/**
