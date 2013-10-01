@@ -2,8 +2,11 @@ package org.ggp.base.player.gamer.statemachine.sample;
 
 import java.util.ArrayDeque;
 import java.util.Deque;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
+
 import org.apache.commons.collections4.map.AbstractReferenceMap;
 import org.apache.commons.collections4.map.AbstractReferenceMap.ReferenceStrength;
 import org.apache.commons.collections4.map.ReferenceMap;
@@ -53,7 +56,7 @@ public final class FabulousPlayer extends SampleGamer {
 		best = null;
 		bestScore = MIN_SCORE - 1;
 		current = new ArrayDeque<Move>();
-		timeout -= 200;
+		timeout -= 1000;
 		int depth = 1;
 		//long now = System.currentTimeMillis();
 		//long estimate;
@@ -90,9 +93,6 @@ public final class FabulousPlayer extends SampleGamer {
 			}
 			nodeCount = 0;
 		}
-		if(hashCheck(state, depth)){
-			return false;
-		}
 		if(theMachine.isTerminal(state)){
 			int score = MIN_SCORE - 1;
 			try {
@@ -117,16 +117,24 @@ public final class FabulousPlayer extends SampleGamer {
 			System.err.println("No legal moves!");
 			return true;
 		}
+		Map<MachineState, Move> next = new HashMap<MachineState, Move>();
 		for(Move m : moves){
-			current.addLast(m);
 			List<Move> list = new LinkedList<Move>();
 			list.add(m);
+			MachineState s;
 			try {
-				if(search(theMachine, theMachine.getNextState(state, list), depth - 1, timeout)){
-					return true;
-				}
+				s = theMachine.getNextState(state, list);
 			} catch (TransitionDefinitionException e) {
 				System.err.println("Something went horribly wrong!");
+				return true;
+			}
+			if(! hashCheck(s, depth - 1)){
+				next.put(s, m);
+			}
+		}
+		for(MachineState s : next.keySet()){
+			current.addLast(next.get(s));
+			if(search(theMachine, s, depth - 1, timeout)){
 				return true;
 			}
 			current.removeLast();
