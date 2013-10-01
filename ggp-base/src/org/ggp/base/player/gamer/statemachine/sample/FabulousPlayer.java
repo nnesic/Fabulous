@@ -2,10 +2,10 @@ package org.ggp.base.player.gamer.statemachine.sample;
 
 import java.util.ArrayDeque;
 import java.util.Deque;
-import java.util.HashSet;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Set;
+import java.util.Map;
 import org.ggp.base.util.statemachine.MachineState;
 import org.ggp.base.util.statemachine.Move;
 import org.ggp.base.util.statemachine.StateMachine;
@@ -33,7 +33,7 @@ public final class FabulousPlayer extends SampleGamer {
 	
 	private int nodeCount;
 	
-	private Set<MachineState> seen;
+	private Map<MachineState, Integer> seen;
 	
 	@Override
 	public Move stateMachineSelectMove(long timeout) throws TransitionDefinitionException, MoveDefinitionException, GoalDefinitionException{
@@ -54,7 +54,7 @@ public final class FabulousPlayer extends SampleGamer {
 		//long now = System.currentTimeMillis();
 		//long estimate;
 		StateMachine theMachine = getStateMachine();
-		seen = new HashSet<MachineState>();
+		seen = new HashMap<MachineState, Integer>();
 		nodeCount = 0;
 		while(! search(theMachine, theMachine.getInitialState(), depth, timeout)){
 			//estimate = 2 * (System.currentTimeMillis() - now);
@@ -63,7 +63,7 @@ public final class FabulousPlayer extends SampleGamer {
 				break;
 			}
 			depth++;
-			seen = new HashSet<MachineState>();
+			seen = new HashMap<MachineState, Integer>();
 			nodeCount = 0;
 		}
 	}
@@ -84,10 +84,10 @@ public final class FabulousPlayer extends SampleGamer {
 			}
 			nodeCount = 0;
 		}
-		if(seen.contains(state)){
+		if(seen.containsKey(state) && seen.get(state) >= depth){
 			return false;
 		}
-		seen.add(state);
+		seen.put(state, depth);
 		if(theMachine.isTerminal(state)){
 			int score = MIN_SCORE - 1;
 			try {
