@@ -25,6 +25,10 @@ import org.ggp.base.util.statemachine.exceptions.TransitionDefinitionException;
  */
 public final class FabulousPlayer extends SampleGamer {
 	
+	private enum SearchResult{
+		LIMIT, TERMINAL, DONE, ERROR, TIMEOUT
+	}
+	
 	private static final int MAX_SCORE = 100;
 	
 	private static final int MIN_SCORE = 0;
@@ -37,14 +41,14 @@ public final class FabulousPlayer extends SampleGamer {
 	
 	private int bestScore;
 	
-	private int nodeCount;
-	
 	private ReferenceMap<MachineState, Integer> seen;
+	
+	private ReferenceMap<MachineState, Object> completed;
 	
 	@Override
 	public Move stateMachineSelectMove(long timeout) throws TransitionDefinitionException, MoveDefinitionException, GoalDefinitionException{
 		if(best == null || best.isEmpty()){
-			System.out.println("No best solution, performing random move.");
+			//System.out.println("No best solution, performing random move.");
 			return getStateMachine().getRandomMove(getCurrentState(), getRole());
 		}
 		return best.removeFirst();
@@ -56,14 +60,15 @@ public final class FabulousPlayer extends SampleGamer {
 		best = null;
 		bestScore = MIN_SCORE - 1;
 		current = new ArrayDeque<Move>();
+		completed = new ReferenceMap<MachineState, Object>(soft, soft);
 		timeout -= 1000;
 		int depth = 1;
 		//long now = System.currentTimeMillis();
 		//long estimate;
 		StateMachine theMachine = getStateMachine();
 		seen = new ReferenceMap<MachineState, Integer>(soft, soft);
-		nodeCount = 0;
-		while(! search(theMachine, theMachine.getInitialState(), depth, timeout)){
+		SearchResult result = search(theMachine, theMachine.getInitialState(), depth, timeout);
+		while(result == SearchResult.LIMIT || result == SearchResult.TERMINAL){
 			//estimate = 2 * (System.currentTimeMillis() - now);
 			//now = System.currentTimeMillis();
 			if(System.currentTimeMillis() > timeout){
@@ -71,7 +76,16 @@ public final class FabulousPlayer extends SampleGamer {
 			}
 			depth++;
 			seen = new ReferenceMap<MachineState, Integer>(soft, soft);
-			nodeCount = 0;
+			result = search(theMachine, theMachine.getInitialState(), depth, timeout);
+		}
+		if(result == SearchResult.ERROR){
+			System.err.println("An error occured during search.");
+		}
+		else if(result == SearchResult.TIMEOUT){
+			System.out.println("Search ran out of time.");
+		}
+		if(best == null || best.isEmpty()){
+			System.out.println("Playing random moves.");
 		}
 		total = System.currentTimeMillis() - total;
 		System.out.println("Search took " + total + "ms.");
@@ -86,12 +100,9 @@ public final class FabulousPlayer extends SampleGamer {
 	 * @param timeout Time limit
 	 * @return True if further search is pointless
 	 */
-	private boolean search(StateMachine theMachine, MachineState state, int depth, long timeout){
-		if(++nodeCount > 500){
-			if(System.currentTimeMillis() > timeout){
-				return true;
-			}
-			nodeCount = 0;
+	private SearchResult search(StateMachine theMachine, MachineState state, int depth, long timeout){
+		if(System.currentTimeMillis() > timeout){
+			return SearchResult.TIMEOUT;
 		}
 		if(theMachine.isTerminal(state)){
 			int score = MIN_SCORE - 1;
@@ -99,23 +110,26 @@ public final class FabulousPlayer extends SampleGamer {
 				score = theMachine.getGoal(state, getRole());
 			} catch (GoalDefinitionException e) {
 				System.err.println("Bad goal description!");
-				return true;
+				return SearchResult.ERROR;
 			}
 			if(score > bestScore){
 				best = new ArrayDeque<Move>();
 				best.addAll(current);
 			}
-			return (score == MAX_SCORE);
+			if(score == MAX_SCORE){
+				return SearchResult.DONE;
+			}
+			return SearchResult.TERMINAL;
 		}
 		if(depth == 0){
-			return false;
+			return SearchResult.LIMIT;
 		}
 		List<Move> moves;
 		try{
 			moves = theMachine.getLegalMoves(state, getRole());
 		} catch (MoveDefinitionException e){
 			System.err.println("No legal moves!");
-			return true;
+			return SearchResult.ERROR;
 		}
 		Map<MachineState, Move> next = new HashMap<MachineState, Move>();
 		for(Move m : moves){
@@ -126,20 +140,29 @@ public final class FabulousPlayer extends SampleGamer {
 				s = theMachine.getNextState(state, list);
 			} catch (TransitionDefinitionException e) {
 				System.err.println("Something went horribly wrong!");
-				return true;
+				return SearchResult.ERROR;
 			}
-			if(! hashCheck(s, depth - 1)){
+			if(!(hashCheck(s, depth - 1) || completed.keySet().contains(s))){
 				next.put(s, m);
 			}
 		}
+		boolean done = true;
 		for(MachineState s : next.keySet()){
 			current.addLast(next.get(s));
-			if(search(theMachine, s, depth - 1, timeout)){
-				return true;
+			SearchResult ret = search(theMachine, s, depth - 1, timeout);
+			if(ret != SearchResult.TERMINAL){
+				if(ret != SearchResult.LIMIT){
+					return ret;
+				}
+				done = false;
 			}
 			current.removeLast();
 		}
-		return false;
+		if(done){
+			completed.put(state, new Object());
+			return SearchResult.TERMINAL;
+		}
+		return SearchResult.LIMIT;
 	}
 	
 	/**
