@@ -1,10 +1,8 @@
 package org.ggp.base.player.gamer.statemachine.sample;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import org.ggp.base.util.statemachine.MachineState;
@@ -128,7 +126,16 @@ final class FabulousMultiPlayer extends SampleGamer {
 				System.err.println("Attempted bad moves!");
 				continue;
 			}
-			int s = maxPlayer(nextState, depth - 1, timeout);
+			int s;
+			try {
+				s = maxPlayer(nextState, depth - 1, timeout);
+			} catch (GoalDefinitionException e) {
+				System.err.println("Bad goal definition!");
+				continue;
+			}
+			if(s == Integer.MIN_VALUE){
+				break;
+			}
 			if(s < worstScore){
 				worstScore = s;
 			}
@@ -144,10 +151,14 @@ final class FabulousMultiPlayer extends SampleGamer {
 	 * @param timeout Time limit
 	 * @return Score value
 	 * @throws MoveDefinitionException Found no legal moves
+	 * @throws GoalDefinitionException Bad goal definition
 	 */
-	private int maxPlayer(MachineState state, int depth, long timeout) throws MoveDefinitionException{
+	private int maxPlayer(MachineState state, int depth, long timeout) throws MoveDefinitionException, GoalDefinitionException{
+		if(theMachine.isTerminal(state)){
+			return theMachine.getGoal(state, role);
+		}
 		if(depth == 0 || System.currentTimeMillis() > timeout){
-			return MIN_SCORE - 1;
+			return Integer.MIN_VALUE;
 		}
 		List<Move> moves;
 		moves = theMachine.getLegalMoves(state, role);

@@ -1,8 +1,5 @@
 package org.ggp.base.player.gamer.statemachine.sample;
 
-import java.util.List;
-
-import org.ggp.base.player.gamer.event.GamerSelectedMoveEvent;
 import org.ggp.base.player.gamer.exception.MetaGamingException;
 import org.ggp.base.util.statemachine.Move;
 import org.ggp.base.util.statemachine.StateMachine;
@@ -11,13 +8,14 @@ import org.ggp.base.util.statemachine.exceptions.MoveDefinitionException;
 import org.ggp.base.util.statemachine.exceptions.TransitionDefinitionException;
 
 /**
+ * The fabulous player.
  * 
- * @author Nera
+ * @author Nera, Nicolai
  *
  */
 public final class FabulousPlayer extends SampleGamer {
-
-	SampleGamer player;
+	
+	private SampleGamer player;
 	
 	@Override
 	public void stateMachineMetaGame(long timeout){
@@ -26,34 +24,29 @@ public final class FabulousPlayer extends SampleGamer {
 		if (roles == 1){
 			player = new FabulousSinglePlayer();
 		}
-		else
+		else{
 			player = new FabulousMultiPlayer();
+		}
 		player.setMatch(this.getMatch());
 		player.setRoleName(this.getRoleName());
 		try {
 			player.metaGame(timeout);
 		} catch (MetaGamingException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			System.err.println("Metagaming failed!");
 		}
 		System.out.println(roles);
 		System.out.println("OHAI");
-		
 	}
 	
 	@Override
-	public Move stateMachineSelectMove(long timeout)
-			throws TransitionDefinitionException, MoveDefinitionException,
-			GoalDefinitionException {
+	public Move stateMachineSelectMove(long timeout) throws TransitionDefinitionException, MoveDefinitionException, GoalDefinitionException{
+		/*
+		List<Move> moves = getStateMachine().getLegalMoves(getCurrentState(), getRole());
+		Move selection = moves.get(0);
+		*/
 		
- 
-	/**	List<Move> moves = getStateMachine().getLegalMoves(getCurrentState(), getRole());
-		Move selection = moves.get(0);*/
-
-		
-
 		//notifyObservers(new GamerSelectedMoveEvent(moves, selection, stop - start));
 		return player.stateMachineSelectMove(timeout);
 	}
-
+	
 }
