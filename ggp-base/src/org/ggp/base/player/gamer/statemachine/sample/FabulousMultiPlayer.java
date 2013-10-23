@@ -103,18 +103,37 @@ final class FabulousMultiPlayer extends SampleGamer {
 	private int minPlayer(MachineState state, Move move, int depth, long timeout) throws MoveDefinitionException{
 		List<Move[]> options = new ArrayList<Move[]>();
 		List<Role> roles = theMachine.getRoles();
-		for(Role player : roles){
+		int fabulous = 0;
+		for(int i = 0; i < roles.size(); i++){
+			Role player = roles.get(i);
 			if(player.equals(role)){
+				fabulous = i;
 				continue;
 			}
 			List<Move> moves = theMachine.getLegalMoves(state, player);
 			Move[] pmoves = new Move[moves.size()];
-			for(int i = 0; i < moves.size(); i++){
-				pmoves[i] = moves.get(i);
+			for(int j = 0; j < moves.size(); j++){
+				pmoves[j] = moves.get(j);
 			}
 			options.add(pmoves);
 		}
-		return 0;
+		Set<List<Move>> next = combinations(options);
+		MachineState nextState;
+		int worstScore = MAX_SCORE + 1;
+		for(List<Move> moves : next){
+			moves.add(fabulous, move);
+			try {
+				nextState = theMachine.getNextState(state, moves);
+			} catch (TransitionDefinitionException e) {
+				System.err.println("Attempted bad moves!");
+				continue;
+			}
+			int s = maxPlayer(nextState, depth - 1, timeout);
+			if(s < worstScore){
+				worstScore = s;
+			}
+		}
+		return worstScore;
 	}
 	
 	/**
@@ -145,23 +164,29 @@ final class FabulousMultiPlayer extends SampleGamer {
 	/**
 	 * Creates all combinations of moves for the opposing players.
 	 * 
-	 * @param roles List of opponents
-	 * @param moves List of arrays of possible moves for each opponent (in the same order as roles)
-	 * @return Set containing all possible combinations of moves
+	 * @param moves List of arrays of possible moves for each opponent (in the order of the roles)
+	 * @return Set containing all possible combinations of moves (in the order of the roles)
 	 */
-	private Set<Map<Role, Move>> combinations(List<Role> roles, List<Move[]> moves){
-		Set<Map<Role, Move>> ret = new HashSet<Map<Role, Move>>();
-		if(roles.size() == 0){
+	private Set<List<Move>> combinations(List<Move[]> moves){
+		Set<List<Move>> ret = new HashSet<List<Move>>();
+		if(moves.size() == 0){
 			return ret;
 		}
-		long num = 1;
+		int num = 1;
 		for(Move[] m : moves){
 			num *= m.length;
 		}
-		for(long i = 0; i < num; i++){
-			
+		for(int i = 0; i < num; i++){
+			int tmp = i;
+			List<Move> combination = new ArrayList<Move>();
+			for(int r = 0; r < moves.size(); r++){
+				Move[] m = moves.get(r);
+				combination.add(m[tmp % m.length]);
+				tmp /= m.length;
+			}
+			ret.add(combination);
 		}
-		return null;
+		return ret;
 	}
 	
 }
