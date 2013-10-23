@@ -18,7 +18,7 @@ import org.ggp.base.util.statemachine.exceptions.MoveDefinitionException;
 import org.ggp.base.util.statemachine.exceptions.TransitionDefinitionException;
 
 /**
- * The Fabulous Player.
+ * Fabulous Singleplayer.
  * 
  * @author Nicolai
  *
