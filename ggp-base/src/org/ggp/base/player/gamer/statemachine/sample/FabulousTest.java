@@ -15,7 +15,7 @@ import external.JSON.JSONException;
  * @Author: Irme, Nera
  */
 public class FabulousTest {
-	FabulousPlayer fab = new FabulousPlayer();
+	FabulousSinglePlayer fab = new FabulousSinglePlayer();
 	CloudGameRepository cloud = new CloudGameRepository("games.ggp.org/base");
 	boolean done = false;
 

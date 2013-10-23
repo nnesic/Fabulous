@@ -5,7 +5,7 @@ import org.ggp.base.util.statemachine.exceptions.GoalDefinitionException;
 import org.ggp.base.util.statemachine.exceptions.MoveDefinitionException;
 import org.ggp.base.util.statemachine.exceptions.TransitionDefinitionException;
 
-public final class FabulousPlayer extends SampleGamer {
+final class FabulousMultiPlayer extends SampleGamer {
 
 	@Override
 	public Move stateMachineSelectMove(long timeout)
