@@ -20,6 +20,7 @@ public final class FabulousPlayer extends SampleGamer {
 	
 	@Override
 	public void stateMachineMetaGame(long timeout){
+		long total = System.currentTimeMillis();
 		StateMachine m = getStateMachine();
 		int roles = m.getRoles().size();
 		if (roles == 1){
@@ -36,19 +37,16 @@ public final class FabulousPlayer extends SampleGamer {
 		} catch (MetaGamingException e) {
 			System.err.println("Metagaming failed!");
 		}
-		System.out.println(roles);
-		System.out.println("OHAI");
+		total = System.currentTimeMillis() - total;
+		System.out.println("Completed metagaming in " + total + "ms.");
 	}
 	
 	@Override
 	public Move stateMachineSelectMove(long timeout) throws TransitionDefinitionException, MoveDefinitionException, GoalDefinitionException{
-		/*
-		List<Move> moves = getStateMachine().getLegalMoves(getCurrentState(), getRole());
-		Move selection = moves.get(0);
-		*/
-		
-		//notifyObservers(new GamerSelectedMoveEvent(moves, selection, stop - start));
+		long total = System.currentTimeMillis();
 		player.setState(getCurrentState());
+		total = System.currentTimeMillis() - total;
+		System.out.println("Selected move in " + total + "ms.");
 		return player.stateMachineSelectMove(timeout);
 	}
 	

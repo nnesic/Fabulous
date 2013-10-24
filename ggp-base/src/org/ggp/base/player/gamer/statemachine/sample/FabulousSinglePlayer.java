@@ -56,7 +56,6 @@ final class FabulousSinglePlayer extends SampleGamer {
 	
 	@Override
 	public void stateMachineMetaGame(long timeout){
-		long total = System.currentTimeMillis();
 		best = null;
 		bestScore = MIN_SCORE - 1;
 		current = new ArrayDeque<Move>();
@@ -87,8 +86,6 @@ final class FabulousSinglePlayer extends SampleGamer {
 		if(best == null || best.isEmpty()){
 			System.out.println("Playing random moves.");
 		}
-		total = System.currentTimeMillis() - total;
-		System.out.println("Search took " + total + "ms.");
 	}
 	
 	/**

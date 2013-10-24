@@ -40,24 +40,18 @@ final class FabulousMultiPlayer extends SampleGamer {
 	
 	@Override
 	public Move stateMachineSelectMove(long timeout) throws TransitionDefinitionException, MoveDefinitionException, GoalDefinitionException{
-		long total = System.currentTimeMillis();
 		timeout -= 1000;
 		Move move = minimax(currentState, timeout);
 		if(move != null){
 			return move;
 		}
-		total = System.currentTimeMillis() - total;
-		System.out.println("Computed the move in " + total + "ms.");
 		return getStateMachine().getRandomMove(currentState, role);
 	}
 	
 	@Override
 	public void stateMachineMetaGame(long timeout){
-		long total = System.currentTimeMillis();
 		theMachine = getStateMachine();
 		role = getRole();
-		total = System.currentTimeMillis() - total;
-		System.out.println("Completed metagaming in " + total + "ms.");
 	}
 	
 	/**
