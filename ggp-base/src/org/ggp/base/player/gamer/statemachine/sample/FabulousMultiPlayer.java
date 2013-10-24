@@ -39,6 +39,7 @@ final class FabulousMultiPlayer extends SampleGamer {
 		if(move != null){
 			return move;
 		}
+		System.out.println("playing random move");
 		return getStateMachine().getRandomMove(getCurrentState(), role);
 	}
 	
