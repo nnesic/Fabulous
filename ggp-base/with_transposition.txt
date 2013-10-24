@@ -1,0 +1,11 @@
+tic-tac-toe (120):
+- Metagame:	3001ms
+- Avg. move:	26ms
+
+nim2 (240):
+- Metagame:	16173ms
+- Avg. move:	5ms
+
+pawn-to-queen (300):
+- Metagame:	225522ms
+- Avg. move:	461ms
