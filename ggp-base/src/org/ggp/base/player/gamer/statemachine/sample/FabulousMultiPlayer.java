@@ -5,6 +5,9 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.apache.commons.collections4.map.AbstractReferenceMap;
+import org.apache.commons.collections4.map.ReferenceMap;
+import org.apache.commons.collections4.map.AbstractReferenceMap.ReferenceStrength;
 import org.ggp.base.util.statemachine.MachineState;
 import org.ggp.base.util.statemachine.Move;
 import org.ggp.base.util.statemachine.Role;
@@ -25,6 +28,8 @@ final class FabulousMultiPlayer extends SampleGamer {
 	
 	private static final int MIN_SCORE = 0;
 	
+	private static final ReferenceStrength soft = AbstractReferenceMap.ReferenceStrength.SOFT;
+	
 	private Role role;
 	
 	private StateMachine theMachine;
@@ -32,6 +37,8 @@ final class FabulousMultiPlayer extends SampleGamer {
 	private boolean done;
 	
 	private MachineState currentState;
+	
+	private ReferenceMap<MachineState, Integer> transpositionMax;
 	
 	@Override
 	public void setState(MachineState state){
@@ -52,6 +59,7 @@ final class FabulousMultiPlayer extends SampleGamer {
 	public void stateMachineMetaGame(long timeout){
 		theMachine = getStateMachine();
 		role = getRole();
+		transpositionMax = new ReferenceMap<MachineState, Integer>(soft, soft);
 	}
 	
 	/**
@@ -76,6 +84,7 @@ final class FabulousMultiPlayer extends SampleGamer {
 		while(! done){
 			if(System.currentTimeMillis() > timeout){
 				System.out.println("Ran out of time!");
+				done = false;
 				break;
 			}
 			depth++;
@@ -88,6 +97,7 @@ final class FabulousMultiPlayer extends SampleGamer {
 					s = minPlayer(state, move, depth, timeout, alpha, beta);
 				} catch (MoveDefinitionException e) {
 					System.err.println("No legal moves!");
+					done = false;
 					continue;
 				}
 				if(s > bestScore && !(s == MAX_SCORE + 1)){
@@ -98,6 +108,9 @@ final class FabulousMultiPlayer extends SampleGamer {
 					alpha = s;
 				}
 			}
+		}
+		if(done){
+			transpositionMax.put(state, bestScore);
 		}
 		return best;
 	}
@@ -140,6 +153,7 @@ final class FabulousMultiPlayer extends SampleGamer {
 				nextState = theMachine.getNextState(state, moves);
 			} catch (TransitionDefinitionException e) {
 				System.err.println("Attempted bad moves!");
+				done = false;
 				continue;
 			}
 			int s;
@@ -147,6 +161,7 @@ final class FabulousMultiPlayer extends SampleGamer {
 				s = maxPlayer(nextState, depth - 1, timeout, alpha, beta);
 			} catch (GoalDefinitionException e) {
 				System.err.println("Bad goal definition!");
+				done = false;
 				continue;
 			}
 			if(s == Integer.MIN_VALUE){
@@ -181,6 +196,9 @@ final class FabulousMultiPlayer extends SampleGamer {
 		if(theMachine.isTerminal(state)){
 			return theMachine.getGoal(state, role);
 		}
+		if(transpositionMax.containsKey(state)){
+			return transpositionMax.get(state);
+		}
 		if(depth == 0 || System.currentTimeMillis() > timeout){
 			done = false;
 			return Integer.MIN_VALUE;
@@ -199,6 +217,9 @@ final class FabulousMultiPlayer extends SampleGamer {
 					break;
 				}
 			}
+		}
+		if(done){
+			transpositionMax.put(state, bestScore);
 		}
 		return bestScore;
 	}
