@@ -88,7 +88,7 @@ final class FabulousMultiPlayer extends SampleGamer {
 					System.err.println("No legal moves!");
 					continue;
 				}
-				if(s > bestScore){
+				if(s > bestScore && !(s == MAX_SCORE + 1)){
 					bestScore = s;
 					best = move;
 				}
@@ -175,7 +175,7 @@ final class FabulousMultiPlayer extends SampleGamer {
 		int bestScore = MIN_SCORE - 1;
 		for(Move move : moves){
 			int s = minPlayer(state, move, depth, timeout);
-			if(s > bestScore){
+			if(s > bestScore && !(s == MAX_SCORE + 1)){
 				bestScore = s;
 			}
 		}
