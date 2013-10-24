@@ -73,6 +73,7 @@ final class FabulousMultiPlayer extends SampleGamer {
 				break;
 			}
 			depth++;
+			done = true;
 			for(Move move : moves){
 				int s = bestScore;
 				try {
@@ -159,6 +160,7 @@ final class FabulousMultiPlayer extends SampleGamer {
 			return theMachine.getGoal(state, role);
 		}
 		if(depth == 0 || System.currentTimeMillis() > timeout){
+			done = false;
 			return Integer.MIN_VALUE;
 		}
 		List<Move> moves;
