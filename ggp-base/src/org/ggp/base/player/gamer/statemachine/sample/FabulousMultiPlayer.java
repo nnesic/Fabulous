@@ -80,10 +80,12 @@ final class FabulousMultiPlayer extends SampleGamer {
 			}
 			depth++;
 			done = true;
+			int alpha = MIN_SCORE - 1;
+			int beta = MAX_SCORE + 1;
 			for(Move move : moves){
 				int s;
 				try {
-					s = minPlayer(state, move, depth, timeout);
+					s = minPlayer(state, move, depth, timeout, alpha, beta);
 				} catch (MoveDefinitionException e) {
 					System.err.println("No legal moves!");
 					continue;
@@ -91,6 +93,9 @@ final class FabulousMultiPlayer extends SampleGamer {
 				if(s > bestScore && !(s == MAX_SCORE + 1)){
 					bestScore = s;
 					best = move;
+				}
+				if(s > alpha){
+					alpha = s;
 				}
 			}
 		}
@@ -104,10 +109,12 @@ final class FabulousMultiPlayer extends SampleGamer {
 	 * @param move Move done by the max player
 	 * @param depth Depth limit
 	 * @param timeout Time limit
+	 * @param alpha Alpha value
+	 * @param beta Beta value
 	 * @return Score value
 	 * @throws MoveDefinitionException Found no legal moves
 	 */
-	private int minPlayer(MachineState state, Move move, int depth, long timeout) throws MoveDefinitionException{
+	private int minPlayer(MachineState state, Move move, int depth, long timeout, int alpha, int beta) throws MoveDefinitionException{
 		List<Move[]> options = new ArrayList<Move[]>();
 		List<Role> roles = theMachine.getRoles();
 		int fabulous = 0;
@@ -137,7 +144,7 @@ final class FabulousMultiPlayer extends SampleGamer {
 			}
 			int s;
 			try {
-				s = maxPlayer(nextState, depth - 1, timeout);
+				s = maxPlayer(nextState, depth - 1, timeout, alpha, beta);
 			} catch (GoalDefinitionException e) {
 				System.err.println("Bad goal definition!");
 				continue;
@@ -147,6 +154,12 @@ final class FabulousMultiPlayer extends SampleGamer {
 			}
 			if(s < worstScore){
 				worstScore = s;
+			}
+			if(s < beta){
+				beta = s;
+				if(alpha >= beta){
+					break;
+				}
 			}
 		}
 		return worstScore;
@@ -158,11 +171,13 @@ final class FabulousMultiPlayer extends SampleGamer {
 	 * @param state Game state
 	 * @param depth Depth limit
 	 * @param timeout Time limit
+	 * @param alpha Alpha value
+	 * @param beta Beta value
 	 * @return Score value
 	 * @throws MoveDefinitionException Found no legal moves
 	 * @throws GoalDefinitionException Bad goal definition
 	 */
-	private int maxPlayer(MachineState state, int depth, long timeout) throws MoveDefinitionException, GoalDefinitionException{
+	private int maxPlayer(MachineState state, int depth, long timeout, int alpha, int beta) throws MoveDefinitionException, GoalDefinitionException{
 		if(theMachine.isTerminal(state)){
 			return theMachine.getGoal(state, role);
 		}
@@ -174,9 +189,15 @@ final class FabulousMultiPlayer extends SampleGamer {
 		moves = theMachine.getLegalMoves(state, role);
 		int bestScore = MIN_SCORE - 1;
 		for(Move move : moves){
-			int s = minPlayer(state, move, depth, timeout);
+			int s = minPlayer(state, move, depth, timeout, alpha, beta);
 			if(s > bestScore && !(s == MAX_SCORE + 1)){
 				bestScore = s;
+			}
+			if(s > alpha){
+				alpha = s;
+				if(alpha >= beta){
+					break;
+				}
 			}
 		}
 		return bestScore;
