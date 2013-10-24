@@ -81,11 +81,12 @@ final class FabulousMultiPlayer extends SampleGamer {
 			depth++;
 			done = true;
 			for(Move move : moves){
-				int s = bestScore;
+				int s;
 				try {
 					s = minPlayer(state, move, depth, timeout);
 				} catch (MoveDefinitionException e) {
 					System.err.println("No legal moves!");
+					continue;
 				}
 				if(s > bestScore){
 					bestScore = s;
