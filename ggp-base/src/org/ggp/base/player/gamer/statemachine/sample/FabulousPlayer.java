@@ -1,6 +1,7 @@
 package org.ggp.base.player.gamer.statemachine.sample;
 
 import org.ggp.base.player.gamer.exception.MetaGamingException;
+import org.ggp.base.util.statemachine.MachineState;
 import org.ggp.base.util.statemachine.Move;
 import org.ggp.base.util.statemachine.StateMachine;
 import org.ggp.base.util.statemachine.exceptions.GoalDefinitionException;
@@ -29,6 +30,7 @@ public final class FabulousPlayer extends SampleGamer {
 		}
 		player.setMatch(this.getMatch());
 		player.setRoleName(this.getRoleName());
+		player.setState(m.getInitialState());
 		try {
 			player.metaGame(timeout);
 		} catch (MetaGamingException e) {
@@ -46,6 +48,7 @@ public final class FabulousPlayer extends SampleGamer {
 		*/
 		
 		//notifyObservers(new GamerSelectedMoveEvent(moves, selection, stop - start));
+		player.setState(getCurrentState());
 		return player.stateMachineSelectMove(timeout);
 	}
 	

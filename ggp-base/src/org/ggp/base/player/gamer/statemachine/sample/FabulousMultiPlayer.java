@@ -31,16 +31,22 @@ final class FabulousMultiPlayer extends SampleGamer {
 	
 	private boolean done;
 	
+	private MachineState currentState;
+	
+	@Override
+	public void setState(MachineState state){
+		currentState = state;
+	}
+	
 	@Override
 	public Move stateMachineSelectMove(long timeout) throws TransitionDefinitionException, MoveDefinitionException, GoalDefinitionException{
 		timeout -= 1000;
-		MachineState state = getCurrentState();
-		Move move = minimax(state, timeout);
+		Move move = minimax(currentState, timeout);
 		if(move != null){
 			return move;
 		}
-		System.out.println("playing random move");
-		return getStateMachine().getRandomMove(getCurrentState(), role);
+		System.out.println("Playing random move.");
+		return getStateMachine().getRandomMove(currentState, role);
 	}
 	
 	@Override
