@@ -45,9 +45,10 @@ public final class FabulousPlayer extends SampleGamer {
 	public Move stateMachineSelectMove(long timeout) throws TransitionDefinitionException, MoveDefinitionException, GoalDefinitionException{
 		long total = System.currentTimeMillis();
 		player.setState(getCurrentState());
+		Move move = player.stateMachineSelectMove(timeout);
 		total = System.currentTimeMillis() - total;
 		System.out.println("Selected move in " + total + "ms.");
-		return player.stateMachineSelectMove(timeout);
+		return move;
 	}
 	
 }
