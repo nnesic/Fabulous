@@ -60,6 +60,7 @@ final class FabulousMultiPlayer extends SampleGamer {
 		theMachine = getStateMachine();
 		role = getRole();
 		transpositionMax = new ReferenceMap<MachineState, Integer>(soft, soft);
+		minimax(currentState, timeout);
 	}
 	
 	/**

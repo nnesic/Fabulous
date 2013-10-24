@@ -20,6 +20,7 @@ public final class FabulousPlayer extends SampleGamer {
 	@Override
 	public void stateMachineMetaGame(long timeout){
 		long total = System.currentTimeMillis();
+		System.out.println();
 		StateMachine m = getStateMachine();
 		int roles = m.getRoles().size();
 		if (roles == 1){
