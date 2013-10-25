@@ -17,6 +17,24 @@ import org.ggp.base.util.statemachine.exceptions.MoveDefinitionException;
 import org.ggp.base.util.statemachine.exceptions.TransitionDefinitionException;
 
 /**
+ * Class for storing information in the transition table.
+ * 
+ * @author Nicolai
+ *
+ */
+class TableEntry{
+	protected int score;
+	protected boolean complete;
+	protected Move best;
+	
+	protected TableEntry(int score, boolean complete, Move best){
+		this.score = score;
+		this.complete = complete;
+		this.best = best;
+	}
+}
+
+/**
  * Fabulous Multiplayer with Minimax search.
  * 
  * @author Nicolai
@@ -38,7 +56,7 @@ final class FabulousMultiPlayer extends SampleGamer {
 	
 	private MachineState currentState;
 	
-	private ReferenceMap<MachineState, Integer> transpositionMax;
+	private ReferenceMap<MachineState, TableEntry> transposition;
 	
 	@Override
 	public void setState(MachineState state){
@@ -59,7 +77,7 @@ final class FabulousMultiPlayer extends SampleGamer {
 	public void stateMachineMetaGame(long timeout){
 		theMachine = getStateMachine();
 		role = getRole();
-		transpositionMax = new ReferenceMap<MachineState, Integer>(soft, soft);
+		transposition = new ReferenceMap<MachineState, TableEntry>(soft, soft);
 		minimax(currentState, timeout);
 	}
 	
@@ -111,7 +129,10 @@ final class FabulousMultiPlayer extends SampleGamer {
 			}
 		}
 		if(done){
-			transpositionMax.put(state, bestScore);
+			transposition.put(state, new TableEntry(bestScore, true, best));
+		}
+		else{
+			transposition.put(state, new TableEntry(bestScore, false, best));
 		}
 		return best;
 	}
@@ -197,8 +218,8 @@ final class FabulousMultiPlayer extends SampleGamer {
 		if(theMachine.isTerminal(state)){
 			return theMachine.getGoal(state, role);
 		}
-		if(transpositionMax.containsKey(state)){
-			return transpositionMax.get(state);
+		if(transposition.containsKey(state) && transposition.get(state).complete){
+			//return transposition.get(state).score;
 		}
 		if(depth == 0 || System.currentTimeMillis() > timeout){
 			done = false;
@@ -207,20 +228,27 @@ final class FabulousMultiPlayer extends SampleGamer {
 		List<Move> moves;
 		moves = theMachine.getLegalMoves(state, role);
 		int bestScore = MIN_SCORE - 1;
+		Move best = null;
+		boolean pruned = false;
 		for(Move move : moves){
 			int s = minPlayer(state, move, depth, timeout, alpha, beta);
 			if(s > bestScore && !(s == MAX_SCORE + 1)){
 				bestScore = s;
+				best = move;
 			}
 			if(s > alpha){
 				alpha = s;
 				if(alpha >= beta){
+					pruned = true;
 					break;
 				}
 			}
 		}
-		if(done){
-			transpositionMax.put(state, bestScore);
+		if(done && ! pruned){
+			transposition.put(state, new TableEntry(bestScore, true, best));
+		}
+		else{
+			transposition.put(state, new TableEntry(bestScore, false, best));
 		}
 		return bestScore;
 	}
