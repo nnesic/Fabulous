@@ -58,6 +58,8 @@ final class FabulousMultiPlayer extends SampleGamer {
 	
 	private ReferenceMap<MachineState, TableEntry> transposition;
 	
+	//private int step;
+	
 	@Override
 	public void setState(MachineState state){
 		currentState = state;
@@ -65,19 +67,27 @@ final class FabulousMultiPlayer extends SampleGamer {
 	
 	@Override
 	public Move stateMachineSelectMove(long timeout) throws TransitionDefinitionException, MoveDefinitionException, GoalDefinitionException{
-		timeout -= 1000;
+		/*
+		step++;
+		if(step != 5){
+			return theMachine.getRandomMove(currentState, role);
+		}
+		*/
+		timeout -= 2000;
 		Move move = minimax(currentState, timeout);
 		if(move != null){
 			return move;
 		}
-		return getStateMachine().getRandomMove(currentState, role);
+		return theMachine.getRandomMove(currentState, role);
 	}
 	
 	@Override
 	public void stateMachineMetaGame(long timeout){
+		timeout -= 2000;
 		theMachine = getStateMachine();
 		role = getRole();
 		transposition = new ReferenceMap<MachineState, TableEntry>(soft, soft);
+		//step = 0;
 		minimax(currentState, timeout);
 	}
 	
@@ -89,6 +99,7 @@ final class FabulousMultiPlayer extends SampleGamer {
 	 * @return Best move
 	 */
 	private Move minimax(MachineState state, long timeout){
+		//System.out.println("Exploring the root.");
 		List<Move> moves;
 		try {
 			moves = theMachine.getLegalMoves(state, role);
@@ -96,7 +107,7 @@ final class FabulousMultiPlayer extends SampleGamer {
 			System.err.println("No legal moves!");
 			return null;
 		}
-		int depth = 1;
+		int depth = 1;	//Change to something high for testing with output!
 		int bestScore = MIN_SCORE - 1;
 		Move best =  null;
 		done = false;
@@ -111,6 +122,7 @@ final class FabulousMultiPlayer extends SampleGamer {
 			int alpha = MIN_SCORE - 1;
 			int beta = MAX_SCORE + 1;
 			for(Move move : moves){
+				//System.out.println("Expanding " + move.toString());
 				int s;
 				try {
 					s = minPlayer(state, move, depth, timeout, alpha, beta);
@@ -119,7 +131,8 @@ final class FabulousMultiPlayer extends SampleGamer {
 					done = false;
 					continue;
 				}
-				if(s > bestScore && !(s == MAX_SCORE + 1)){
+				//System.out.println("Returned score of " + s);
+				if(s > bestScore && s != MAX_SCORE + 1){
 					bestScore = s;
 					best = move;
 				}
@@ -134,6 +147,7 @@ final class FabulousMultiPlayer extends SampleGamer {
 		else{
 			transposition.put(state, new TableEntry(bestScore, false, best));
 		}
+		//System.out.println("Choose " + best.toString());
 		return best;
 	}
 	
@@ -150,6 +164,7 @@ final class FabulousMultiPlayer extends SampleGamer {
 	 * @throws MoveDefinitionException Found no legal moves
 	 */
 	private int minPlayer(MachineState state, Move move, int depth, long timeout, int alpha, int beta) throws MoveDefinitionException{
+		//System.out.println("Exploring a min-player node.");
 		List<Move[]> options = new ArrayList<Move[]>();
 		List<Role> roles = theMachine.getRoles();
 		int fabulous = 0;
@@ -170,6 +185,7 @@ final class FabulousMultiPlayer extends SampleGamer {
 		MachineState nextState;
 		int worstScore = MAX_SCORE + 1;
 		for(List<Move> moves : next){
+			//System.out.println("Expanding " + moves.get(0).toString());
 			moves.add(fabulous, move);
 			try {
 				nextState = theMachine.getNextState(state, moves);
@@ -195,10 +211,12 @@ final class FabulousMultiPlayer extends SampleGamer {
 			if(s < beta){
 				beta = s;
 				if(alpha >= beta){
+					//System.out.println("Pruning.");
 					break;
 				}
 			}
 		}
+		//System.out.println("Returning a score of " + worstScore);
 		return worstScore;
 	}
 	
@@ -215,32 +233,56 @@ final class FabulousMultiPlayer extends SampleGamer {
 	 * @throws GoalDefinitionException Bad goal definition
 	 */
 	private int maxPlayer(MachineState state, int depth, long timeout, int alpha, int beta) throws MoveDefinitionException, GoalDefinitionException{
+		//System.out.println("Exploring a max-player node.");
 		if(theMachine.isTerminal(state)){
+			//System.out.println("Found a goal of value " + theMachine.getGoal(state, role));
 			return theMachine.getGoal(state, role);
 		}
 		if(transposition.containsKey(state) && transposition.get(state).complete){
-			//return transposition.get(state).score;
+			//System.out.println("Found score of " + transposition.get(state).score + " in the transposition table.");
+			return transposition.get(state).score;
 		}
 		if(depth == 0 || System.currentTimeMillis() > timeout){
 			done = false;
 			return Integer.MIN_VALUE;
 		}
-		List<Move> moves;
-		moves = theMachine.getLegalMoves(state, role);
 		int bestScore = MIN_SCORE - 1;
 		Move best = null;
 		boolean pruned = false;
-		for(Move move : moves){
-			int s = minPlayer(state, move, depth, timeout, alpha, beta);
-			if(s > bestScore && !(s == MAX_SCORE + 1)){
+		if(transposition.containsKey(state) && transposition.get(state).best != null){
+			best = transposition.get(state).best;
+			//System.out.println("Expanding " + best.toString());
+			int s = minPlayer(state, best, depth, timeout, alpha, beta);
+			if(s != MAX_SCORE + 1){
 				bestScore = s;
-				best = move;
 			}
 			if(s > alpha){
 				alpha = s;
 				if(alpha >= beta){
+					//System.out.println("Pruning.");
 					pruned = true;
-					break;
+				}
+			}
+		}
+		if(! pruned){
+			List<Move> moves = theMachine.getLegalMoves(state, role);
+			for(Move move : moves){
+				if(move.equals(best)){
+					continue;
+				}
+				//System.out.println("Expanding " + move.toString());
+				int s = minPlayer(state, move, depth, timeout, alpha, beta);
+				if(s > bestScore && s != MAX_SCORE + 1){
+					bestScore = s;
+					best = move;
+				}
+				if(s > alpha){
+					alpha = s;
+					if(alpha >= beta){
+						//System.out.println("Pruning.");
+						pruned = true;
+						break;
+					}
 				}
 			}
 		}
@@ -250,6 +292,7 @@ final class FabulousMultiPlayer extends SampleGamer {
 		else{
 			transposition.put(state, new TableEntry(bestScore, false, best));
 		}
+		//System.out.println("Returning a score of " + bestScore);
 		return bestScore;
 	}
 	
