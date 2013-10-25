@@ -121,6 +121,7 @@ final class FabulousMultiPlayer extends SampleGamer {
 			done = true;
 			int alpha = MIN_SCORE - 1;
 			int beta = MAX_SCORE + 1;
+			bestScore = MIN_SCORE - 1;  /////Added this here
 			for(Move move : moves){
 				//System.out.println("Expanding " + move.toString());
 				int s;
@@ -249,7 +250,7 @@ final class FabulousMultiPlayer extends SampleGamer {
 		int bestScore = MIN_SCORE - 1;
 		Move best = null;
 		boolean pruned = false;
-		if(transposition.containsKey(state) && transposition.get(state).best != null){
+		/*if(transposition.containsKey(state) && transposition.get(state).best != null){
 			best = transposition.get(state).best;
 			//System.out.println("Expanding " + best.toString());
 			int s = minPlayer(state, best, depth, timeout, alpha, beta);
@@ -263,7 +264,7 @@ final class FabulousMultiPlayer extends SampleGamer {
 					pruned = true;
 				}
 			}
-		}
+		}*/
 		if(! pruned){
 			List<Move> moves = theMachine.getLegalMoves(state, role);
 			for(Move move : moves){

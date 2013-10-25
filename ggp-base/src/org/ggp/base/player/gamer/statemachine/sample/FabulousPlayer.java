@@ -27,7 +27,7 @@ public final class FabulousPlayer extends SampleGamer {
 			player = new FabulousSinglePlayer();
 		}
 		else{
-			player = new FabulousMultiPlayer();
+			player = new FabulousMultiPlayer2();
 		}
 		player.setMatch(this.getMatch());
 		player.setRoleName(this.getRoleName());
