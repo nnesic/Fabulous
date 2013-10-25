@@ -132,12 +132,14 @@ final class FabulousMultiPlayer extends SampleGamer {
 					continue;
 				}
 				//System.out.println("Returned score of " + s);
-				if(s > bestScore && s != MAX_SCORE + 1){
-					bestScore = s;
-					best = move;
-				}
-				if(s > alpha){
-					alpha = s;
+				if(s != MAX_SCORE + 1){
+					if(s > bestScore){
+						bestScore = s;
+						best = move;
+					}
+					if(s > alpha){
+						alpha = s;
+					}
 				}
 			}
 		}
@@ -205,14 +207,16 @@ final class FabulousMultiPlayer extends SampleGamer {
 			if(s == Integer.MIN_VALUE){
 				break;
 			}
-			if(s < worstScore){
-				worstScore = s;
-			}
-			if(s < beta){
-				beta = s;
-				if(alpha >= beta){
-					//System.out.println("Pruning.");
-					break;
+			if(s != MIN_SCORE - 1){
+				if(s < worstScore){
+					worstScore = s;
+				}
+				if(s < beta){
+					beta = s;
+					if(alpha >= beta){
+						//System.out.println("Pruning.");
+						break;
+					}
 				}
 			}
 		}
@@ -255,12 +259,12 @@ final class FabulousMultiPlayer extends SampleGamer {
 			int s = minPlayer(state, best, depth, timeout, alpha, beta);
 			if(s != MAX_SCORE + 1){
 				bestScore = s;
-			}
-			if(s > alpha){
-				alpha = s;
-				if(alpha >= beta){
-					//System.out.println("Pruning.");
-					pruned = true;
+				if(s > alpha){
+					alpha = s;
+					if(alpha >= beta){
+						//System.out.println("Pruning.");
+						pruned = true;
+					}
 				}
 			}
 		}
@@ -272,16 +276,18 @@ final class FabulousMultiPlayer extends SampleGamer {
 				}
 				//System.out.println("Expanding " + move.toString());
 				int s = minPlayer(state, move, depth, timeout, alpha, beta);
-				if(s > bestScore && s != MAX_SCORE + 1){
-					bestScore = s;
-					best = move;
-				}
-				if(s > alpha){
-					alpha = s;
-					if(alpha >= beta){
-						//System.out.println("Pruning.");
-						pruned = true;
-						break;
+				if(s != MAX_SCORE + 1){
+					if(s > bestScore){
+						bestScore = s;
+						best = move;
+					}
+					if(s > alpha){
+						alpha = s;
+						if(alpha >= beta){
+							//System.out.println("Pruning.");
+							pruned = true;
+							break;
+						}
 					}
 				}
 			}
