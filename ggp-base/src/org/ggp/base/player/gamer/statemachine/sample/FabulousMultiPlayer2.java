@@ -47,13 +47,15 @@ final class FabulousMultiPlayer2 extends SampleGamer {
 	/**
 	 * Thrown if a timeout occurs during search.
 	 */
-	private class TimeoutException extends RuntimeException {
+	private class TimeoutException extends Throwable {
 		private static final long serialVersionUID = 7485356568086889532L;
 		
 		public TimeoutException(){
 			super();
 		}
 	}
+	
+	private final TimeoutException timeoutException = new TimeoutException();
 	
 	private ReferenceMap<MachineState, Tuple> transposition;
 	
@@ -159,7 +161,7 @@ final class FabulousMultiPlayer2 extends SampleGamer {
 	 */
 	private Tuple maxPlayer(MachineState state, int depth, long timeout, int alpha, int beta) throws TimeoutException{
 		if(System.currentTimeMillis() > timeout){
-			throw new TimeoutException();
+			throw timeoutException;
 		}
 		if(theMachine.isTerminal(state)){
 			Tuple ret;
@@ -231,7 +233,7 @@ final class FabulousMultiPlayer2 extends SampleGamer {
 	 */
 	private Tuple minPlayer(MachineState state, Move move, int depth, long timeout, int alpha, int beta) throws TimeoutException{
 		if( System.currentTimeMillis() > timeout){
-			throw new TimeoutException();
+			throw timeoutException;
 		}
 		
 		List<List<Move>> options = new ArrayList<List<Move>>();
