@@ -307,6 +307,10 @@ final class FabulousMultiPlayer2 extends SampleGamer {
 			List<Move> combination = new ArrayList<Move>();
 			for(int r = 0; r < moves.size(); r++){
 				List<Move> l = moves.get(r);
+				if(l.size() == 0){
+					combination.add(null);
+					continue;
+				}
 				combination.add(l.get(tmp % l.size()));
 				tmp /= l.size();
 			}
