@@ -37,10 +37,12 @@ final class FabulousMultiPlayer2 extends SampleGamer {
 	private class Tuple {
 		protected int score;
 		protected boolean complete;
+		protected boolean pruned;
 
-		protected Tuple (int score, boolean complete){
+		protected Tuple (int score, boolean complete, boolean pruned){
 			this.complete = complete;
 			this.score = score;
+			this.pruned = pruned;
 		}
 	}
 	
@@ -120,7 +122,7 @@ final class FabulousMultiPlayer2 extends SampleGamer {
 			int beta = MAX_SCORE + 1;
 			notDone = false;
 			for (Move move: moves){
-				Tuple tempScore = new Tuple(bestScore, false);
+				Tuple tempScore = new Tuple(bestScore, false, false);
 				try {
 					tempScore = minPlayer (state, move, depth, timeout, alpha, beta);
 				} catch (TimeoutException e){
@@ -161,10 +163,10 @@ final class FabulousMultiPlayer2 extends SampleGamer {
 		if(theMachine.isTerminal(state)){
 			Tuple ret;
 			try {
-				ret = new Tuple(theMachine.getGoal(state, role), true);
+				ret = new Tuple(theMachine.getGoal(state, role), true, false);
 			} catch (GoalDefinitionException e) {
 				System.err.println("Bad goal description!");
-				ret = new Tuple(Integer.MIN_VALUE, false);
+				ret = new Tuple(Integer.MIN_VALUE, false, false);
 			}
 			//System.out.println("Found a goal of value " + ret.score);
 			transposition.put(state, ret);
@@ -174,10 +176,10 @@ final class FabulousMultiPlayer2 extends SampleGamer {
 			return transposition.get(state);
 		}
 		if(depth == 0){
-			return new Tuple (Integer.MIN_VALUE, false);
+			return new Tuple(Integer.MIN_VALUE, false, false);
 		}
 		
-		int bestScore = MIN_SCORE - 1;
+		//int bestScore = MIN_SCORE - 1;
 		//Move bestMove = null;
 		//boolean pruned = false;
 		boolean complete = true;
@@ -188,7 +190,7 @@ final class FabulousMultiPlayer2 extends SampleGamer {
 			moves = theMachine.getLegalMoves(state, role);
 		} catch (MoveDefinitionException e) {
 			System.err.println("No legal moves!");
-			return new Tuple(Integer.MIN_VALUE, false);
+			return new Tuple(Integer.MIN_VALUE, false, false);
 		}
 		for(Move move : moves){
 			Tuple s = minPlayer(state, move, depth, timeout, alpha, beta);
@@ -198,10 +200,12 @@ final class FabulousMultiPlayer2 extends SampleGamer {
 			}	
 			if(s.score != Integer.MIN_VALUE){
 				foundOne = true;
+				/*
 				if(s.score > bestScore){
 					bestScore = s.score;
 					//bestMove = move;
 				}
+				*/
 				if(s.score > alpha){
 					alpha = s.score;
 					if(alpha >= beta){
@@ -210,12 +214,15 @@ final class FabulousMultiPlayer2 extends SampleGamer {
 					}
 				}
 			}
+			if(s.pruned){
+				pruned = true;
+			}
 		}
 		
 		if(! foundOne){
-			bestScore = Integer.MIN_VALUE;
+			alpha = Integer.MIN_VALUE;
 		}
-		Tuple ret = new Tuple(bestScore, complete);
+		Tuple ret = new Tuple(alpha, complete, pruned);
 		if(complete && !pruned){
 			transposition.put(state, ret);
 		}
@@ -260,9 +267,10 @@ final class FabulousMultiPlayer2 extends SampleGamer {
 		Set<List<Move>> next = combinations(options);
 		
 		MachineState nextState;
-		int worstScore = MAX_SCORE + 1;
+		//int worstScore = MAX_SCORE + 1;
 		boolean complete = true;
 		boolean foundOne = false;
+		boolean pruned = false;
 		for(List<Move> moves : next){
 			//System.out.println("Expanding " + moves.get(0).toString());
 			moves.add(fabulous, move);
@@ -280,22 +288,28 @@ final class FabulousMultiPlayer2 extends SampleGamer {
 			}
 			if(s.score != Integer.MIN_VALUE){
 				foundOne = true;
+				/*
 				if(s.score < worstScore){
 					worstScore = s.score;
 				}
+				*/
 				if(s.score < beta){
 					beta = s.score;
 					if(alpha >= beta){
+						pruned = true;
 						break;
 					}
 				}
 			}
+			if(s.pruned){
+				pruned = true;
+			}
 		}
 		
 		if (!foundOne){
-			worstScore = Integer.MIN_VALUE;
+			beta = Integer.MIN_VALUE;
 		}
-		return new Tuple (worstScore, complete);
+		return new Tuple (beta, complete, pruned);
 	}
 	
 	/**
