@@ -289,7 +289,7 @@ final class FabulousMultiPlayer2 extends SampleGamer {
 					worstScore = s.score;
 				}
 				if(s.score < beta){
-					alpha = s.score;
+					beta = s.score;
 					if(alpha >= beta){
 						break;
 					}
