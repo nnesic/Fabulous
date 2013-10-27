@@ -200,6 +200,9 @@ final class FabulousMultiPlayer2 extends SampleGamer {
 			return new Tuple(Integer.MIN_VALUE, false, false);
 		}
 
+		if(! prune){
+			alpha = MIN_SCORE - 1;
+		}
 		//int bestScore = MIN_SCORE - 1;
 		//Move bestMove = null;
 		//boolean pruned = false;
@@ -290,6 +293,9 @@ final class FabulousMultiPlayer2 extends SampleGamer {
 		}
 		Set<List<Move>> next = combinations(options);
 
+		if(! prune){
+			beta = MAX_SCORE + 1;
+		}
 		MachineState nextState;
 		//int worstScore = MAX_SCORE + 1;
 		boolean complete = true;
