@@ -173,7 +173,7 @@ final class FabulousMultiPlayer2 extends SampleGamer {
 			return ret;
 		}
 		if (transposition.containsKey(state) && transposition.get(state).complete){
-			//return transposition.get(state);
+			return transposition.get(state);
 		}
 		if(depth == 0){
 			return new Tuple(Integer.MIN_VALUE, false, false);
