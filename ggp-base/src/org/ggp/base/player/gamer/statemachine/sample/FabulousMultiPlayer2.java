@@ -23,13 +23,13 @@ import org.ggp.base.util.statemachine.exceptions.TransitionDefinitionException;
  *
  */
 final class FabulousMultiPlayer2 extends SampleGamer {
-	
+
 	private static final int MAX_SCORE = 100;
-	
+
 	private static final int MIN_SCORE = 0;
-	
+
 	private static final ReferenceStrength soft = AbstractReferenceMap.ReferenceStrength.SOFT;
-	
+
 	/**
 	 * Minimax internal node return value.
 	 * Holds a score and information about completeness of exploration.
@@ -45,33 +45,33 @@ final class FabulousMultiPlayer2 extends SampleGamer {
 			this.pruned = pruned;
 		}
 	}
-	
+
 	/**
 	 * Thrown if a timeout occurs during search.
 	 */
 	private class TimeoutException extends Throwable {
 		private static final long serialVersionUID = 7485356568086889532L;
-		
+
 		public TimeoutException(){
 			super();
 		}
 	}
-	
+
 	private final TimeoutException timeoutException = new TimeoutException();
-	
+
 	private ReferenceMap<MachineState, Tuple> transposition;
-	
+
 	private Role role;
-	
+
 	private StateMachine theMachine;
-	
+
 	private MachineState currentState;
-	
+
 	@Override
 	public void setState(MachineState state){
 		currentState = state;
 	}
-	
+
 	@Override
 	public void stateMachineMetaGame(long timeout){
 		timeout -= 500;
@@ -80,7 +80,7 @@ final class FabulousMultiPlayer2 extends SampleGamer {
 		transposition = new ReferenceMap<MachineState, Tuple>(soft, soft);
 		minimax(currentState, timeout);
 	}
-	
+
 	@Override
 	public Move stateMachineSelectMove(long timeout) throws TransitionDefinitionException, MoveDefinitionException, GoalDefinitionException{
 		timeout -= 500;
@@ -91,7 +91,7 @@ final class FabulousMultiPlayer2 extends SampleGamer {
 		System.out.println("Playing random move.");
 		return theMachine.getRandomMove(currentState, role);
 	}
-	
+
 	/**
 	 * Performs exhaustive minimax search in a state.
 	 * 
@@ -112,39 +112,39 @@ final class FabulousMultiPlayer2 extends SampleGamer {
 		int bestScore = MIN_SCORE - 1;
 		Move bestMove =  null;
 		Search:
-		while(notDone){
-			if(System.currentTimeMillis() > timeout){
-				System.out.println("Ran out of time!");
-				break;
-			}
-			depth++;
-			int alpha = MIN_SCORE - 1;
-			int beta = MAX_SCORE + 1;
-			notDone = false;
-			for (Move move: moves){
-				Tuple tempScore = new Tuple(bestScore, false, false);
-				try {
-					tempScore = minPlayer (state, move, depth, timeout, alpha, beta);
-				} catch (TimeoutException e){
+			while(notDone){
+				if(System.currentTimeMillis() > timeout){
 					System.out.println("Ran out of time!");
-					break Search;
+					break;
 				}
-				if(!tempScore.complete){
-					notDone = true;
-				}
-				if(tempScore.complete && tempScore.score > bestScore){
-					bestScore = tempScore.score;
-					bestMove = move;
-				}
-				if(tempScore.score > alpha){
-					alpha = tempScore.score;
+				depth++;
+				int alpha = MIN_SCORE - 1;
+				int beta = MAX_SCORE + 1;
+				notDone = false;
+				for (Move move: moves){
+					Tuple tempScore = new Tuple(bestScore, false, false);
+					try {
+						tempScore = minPlayer (state, move, depth, timeout, alpha, beta);
+					} catch (TimeoutException e){
+						System.out.println("Ran out of time!");
+						break Search;
+					}
+					if(!tempScore.complete){
+						notDone = true;
+					}
+					if(tempScore.complete && tempScore.score > bestScore){
+						bestScore = tempScore.score;
+						bestMove = move;
+					}
+					if(tempScore.score > alpha && tempScore.complete){
+						alpha = tempScore.score;
+					}
 				}
 			}
-		}
 		//System.out.println("Done. Depth: " + depth);
 		return bestMove;
 	}
-	
+
 	/**
 	 * Recursively performs minimax search (max-player move)
 	 * 
@@ -173,12 +173,12 @@ final class FabulousMultiPlayer2 extends SampleGamer {
 			return ret;
 		}
 		if (transposition.containsKey(state) && transposition.get(state).complete){
-			return transposition.get(state);
+			//return transposition.get(state);
 		}
 		if(depth == 0){
 			return new Tuple(Integer.MIN_VALUE, false, false);
 		}
-		
+
 		//int bestScore = MIN_SCORE - 1;
 		//Move bestMove = null;
 		//boolean pruned = false;
@@ -205,20 +205,23 @@ final class FabulousMultiPlayer2 extends SampleGamer {
 					bestScore = s.score;
 					//bestMove = move;
 				}
-				*/
-				if(s.score > alpha){
-					alpha = s.score;
+				 */
+				if (s.complete){
+					if(s.score > alpha){
+						alpha = s.score;
+					}
 					if(alpha >= beta){
 						pruned = true;
 						break;
 					}
 				}
 			}
+
 			if(s.pruned){
 				pruned = true;
 			}
 		}
-		
+
 		if(! foundOne){
 			alpha = Integer.MIN_VALUE;
 		}
@@ -228,7 +231,7 @@ final class FabulousMultiPlayer2 extends SampleGamer {
 		}
 		return ret;
 	}
-	
+
 	/**
 	 * Recursively performs minimax search (min-player move)
 	 * 
@@ -245,7 +248,7 @@ final class FabulousMultiPlayer2 extends SampleGamer {
 		if( System.currentTimeMillis() > timeout){
 			throw timeoutException;
 		}
-		
+
 		List<List<Move>> options = new ArrayList<List<Move>>();
 		List<Role> roles = theMachine.getRoles();
 		int fabulous = 0;
@@ -265,7 +268,7 @@ final class FabulousMultiPlayer2 extends SampleGamer {
 			options.add(moves);
 		}
 		Set<List<Move>> next = combinations(options);
-		
+
 		MachineState nextState;
 		//int worstScore = MAX_SCORE + 1;
 		boolean complete = true;
@@ -292,26 +295,29 @@ final class FabulousMultiPlayer2 extends SampleGamer {
 				if(s.score < worstScore){
 					worstScore = s.score;
 				}
-				*/
-				if(s.score < beta){
-					beta = s.score;
+				 */
+				if (s.complete){
+					if(s.score <= beta){
+						beta = s.score;
+					}
 					if(alpha >= beta){
 						pruned = true;
 						break;
 					}
 				}
 			}
+
 			if(s.pruned){
 				pruned = true;
 			}
 		}
-		
+
 		if (!foundOne){
 			beta = Integer.MIN_VALUE;
 		}
 		return new Tuple (beta, complete, pruned);
 	}
-	
+
 	/**
 	 * Creates all combinations of moves for opposing players.
 	 * 
@@ -343,7 +349,7 @@ final class FabulousMultiPlayer2 extends SampleGamer {
 		}
 		return ret;
 	}
-	
+
 }
 
 
