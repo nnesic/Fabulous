@@ -132,12 +132,14 @@ final class FabulousMultiPlayer2 extends SampleGamer {
 					if(!tempScore.complete){
 						notDone = true;
 					}
-					if(tempScore.complete && tempScore.score > bestScore){
-						bestScore = tempScore.score;
-						bestMove = move;
-					}
-					if(tempScore.score > alpha && tempScore.complete){
-						alpha = tempScore.score;
+					else{
+						if(tempScore.score > bestScore){
+							bestScore = tempScore.score;
+							bestMove = move;
+						}
+						if(tempScore.score > alpha){
+							alpha = tempScore.score;
+						}
 					}
 				}
 			}
@@ -206,7 +208,7 @@ final class FabulousMultiPlayer2 extends SampleGamer {
 					//bestMove = move;
 				}
 				 */
-				if (s.complete){
+				if(s.complete){
 					if(s.score > alpha){
 						alpha = s.score;
 					}
@@ -296,7 +298,7 @@ final class FabulousMultiPlayer2 extends SampleGamer {
 					worstScore = s.score;
 				}
 				 */
-				if (s.complete){
+				if(s.complete){
 					if(s.score <= beta){
 						beta = s.score;
 					}
@@ -312,7 +314,7 @@ final class FabulousMultiPlayer2 extends SampleGamer {
 			}
 		}
 
-		if (!foundOne){
+		if(!foundOne){
 			beta = Integer.MIN_VALUE;
 		}
 		return new Tuple (beta, complete, pruned);
