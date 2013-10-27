@@ -15,7 +15,11 @@ import org.ggp.base.util.statemachine.exceptions.TransitionDefinitionException;
  */
 public final class FabulousPlayer extends SampleGamer {
 	
-	private SampleGamer player;
+	private final SampleGamer singlePlayer = new FabulousSinglePlayer();
+	
+	private final SampleGamer multiPlayer = new FabulousMultiPlayer2();
+	
+	private SampleGamer currentPlayer;
 	
 	@Override
 	public void stateMachineMetaGame(long timeout){
@@ -24,16 +28,16 @@ public final class FabulousPlayer extends SampleGamer {
 		StateMachine m = getStateMachine();
 		int roles = m.getRoles().size();
 		if (roles == 1){
-			player = new FabulousSinglePlayer();
+			currentPlayer = singlePlayer;
 		}
 		else{
-			player = new FabulousMultiPlayer2();
+			currentPlayer = multiPlayer;
 		}
-		player.setMatch(this.getMatch());
-		player.setRoleName(this.getRoleName());
-		player.setState(m.getInitialState());
+		currentPlayer.setMatch(this.getMatch());
+		currentPlayer.setRoleName(this.getRoleName());
+		currentPlayer.setState(m.getInitialState());
 		try {
-			player.metaGame(timeout);
+			currentPlayer.metaGame(timeout);
 		} catch (MetaGamingException e) {
 			System.err.println("Metagaming failed!");
 		}
@@ -44,8 +48,8 @@ public final class FabulousPlayer extends SampleGamer {
 	@Override
 	public Move stateMachineSelectMove(long timeout) throws TransitionDefinitionException, MoveDefinitionException, GoalDefinitionException{
 		long total = System.currentTimeMillis();
-		player.setState(getCurrentState());
-		Move move = player.stateMachineSelectMove(timeout);
+		currentPlayer.setState(getCurrentState());
+		Move move = currentPlayer.stateMachineSelectMove(timeout);
 		total = System.currentTimeMillis() - total;
 		System.out.println("Selected move in " + total + "ms.");
 		return move;
