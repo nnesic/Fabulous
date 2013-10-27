@@ -187,6 +187,7 @@ final class FabulousMultiPlayer2 extends SampleGamer {
 		//boolean pruned = false;
 		boolean complete = true;
 		boolean foundOne = false;
+		boolean pruned = false;
 		List<Move> moves;
 		try {
 			moves = theMachine.getLegalMoves(state, role);
@@ -206,6 +207,13 @@ final class FabulousMultiPlayer2 extends SampleGamer {
 					bestScore = s.score;
 					//bestMove = move;
 				}
+				if(s.score > alpha){
+					alpha = s.score;
+					if(alpha >= beta){
+						pruned = true;
+						break;
+					}
+				}
 			}
 		}
 		
@@ -213,7 +221,7 @@ final class FabulousMultiPlayer2 extends SampleGamer {
 			bestScore = Integer.MIN_VALUE;
 		}
 		Tuple ret = new Tuple(bestScore, complete);
-		if(complete){
+		if(complete && !pruned){
 			transposition.put(state, ret);
 		}
 		return ret;
@@ -279,6 +287,12 @@ final class FabulousMultiPlayer2 extends SampleGamer {
 				foundOne = true;
 				if(s.score < worstScore){
 					worstScore = s.score;
+				}
+				if(s.score < beta){
+					alpha = s.score;
+					if(alpha >= beta){
+						break;
+					}
 				}
 			}
 		}
