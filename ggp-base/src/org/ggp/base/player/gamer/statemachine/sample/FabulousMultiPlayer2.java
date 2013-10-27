@@ -27,8 +27,12 @@ final class FabulousMultiPlayer2 extends SampleGamer {
 	private static final int MAX_SCORE = 100;
 
 	private static final int MIN_SCORE = 0;
+	
+	private static final int TIME_MULT = 1;
+	
+	private static final int TIME_DIV = 4;
 
-	private static final ReferenceStrength soft = AbstractReferenceMap.ReferenceStrength.SOFT;
+	private static final ReferenceStrength SOFT = AbstractReferenceMap.ReferenceStrength.SOFT;
 
 	/**
 	 * Minimax internal node return value.
@@ -66,6 +70,12 @@ final class FabulousMultiPlayer2 extends SampleGamer {
 	private StateMachine theMachine;
 
 	private MachineState currentState;
+	
+	private long timeout;
+	
+	private long turnpoint;
+	
+	private boolean prune;
 
 	@Override
 	public void setState(MachineState state){
@@ -75,16 +85,22 @@ final class FabulousMultiPlayer2 extends SampleGamer {
 	@Override
 	public void stateMachineMetaGame(long timeout){
 		timeout -= 500;
+		this.timeout = timeout;
+		this.turnpoint = ((TIME_DIV - TIME_MULT) * System.currentTimeMillis() + TIME_MULT * timeout) / TIME_DIV;
 		theMachine = getStateMachine();
 		role = getRole();
-		transposition = new ReferenceMap<MachineState, Tuple>(soft, soft);
-		minimax(currentState, timeout);
+		transposition = new ReferenceMap<MachineState, Tuple>(SOFT, SOFT);
+		prune = false;
+		minimax(currentState);
 	}
 
 	@Override
 	public Move stateMachineSelectMove(long timeout) throws TransitionDefinitionException, MoveDefinitionException, GoalDefinitionException{
 		timeout -= 500;
-		Move move = minimax(currentState, timeout);
+		this.timeout = timeout;
+		this.turnpoint = ((TIME_DIV - TIME_MULT) * System.currentTimeMillis() + TIME_MULT * timeout) / TIME_DIV;
+		prune = false;
+		Move move = minimax(currentState);
 		if(move != null){
 			return move;
 		}
@@ -99,7 +115,7 @@ final class FabulousMultiPlayer2 extends SampleGamer {
 	 * @param timeout Time limit
 	 * @return Ideal move
 	 */
-	private Move minimax(MachineState state, long timeout){
+	private Move minimax(MachineState state){
 		List<Move> moves;
 		try {
 			moves = theMachine.getLegalMoves(state, role);
@@ -118,13 +134,16 @@ final class FabulousMultiPlayer2 extends SampleGamer {
 					break;
 				}
 				depth++;
+				if(System.currentTimeMillis() > turnpoint){
+					prune = true;
+				}
 				int alpha = MIN_SCORE - 1;
 				int beta = MAX_SCORE + 1;
 				notDone = false;
 				for (Move move: moves){
 					Tuple tempScore = new Tuple(bestScore, false, false);
 					try {
-						tempScore = minPlayer (state, move, depth, timeout, alpha, beta);
+						tempScore = minPlayer (state, move, depth, alpha, beta);
 					} catch (TimeoutException e){
 						System.out.println("Ran out of time!");
 						break Search;
@@ -137,7 +156,7 @@ final class FabulousMultiPlayer2 extends SampleGamer {
 							bestScore = tempScore.score;
 							bestMove = move;
 						}
-						if(tempScore.score > alpha){
+						if(prune && tempScore.score > alpha){
 							alpha = tempScore.score;
 						}
 					}
@@ -158,7 +177,7 @@ final class FabulousMultiPlayer2 extends SampleGamer {
 	 * @return Best score
 	 * @throws TimeoutException Time limit exceeded
 	 */
-	private Tuple maxPlayer(MachineState state, int depth, long timeout, int alpha, int beta) throws TimeoutException{
+	private Tuple maxPlayer(MachineState state, int depth, int alpha, int beta) throws TimeoutException{
 		if(System.currentTimeMillis() > timeout){
 			throw timeoutException;
 		}
@@ -195,7 +214,7 @@ final class FabulousMultiPlayer2 extends SampleGamer {
 			return new Tuple(Integer.MIN_VALUE, false, false);
 		}
 		for(Move move : moves){
-			Tuple s = minPlayer(state, move, depth, timeout, alpha, beta);
+			Tuple s = minPlayer(state, move, depth, alpha, beta);
 			if(!s.complete){
 				complete = false;
 				//return new Tuple (Integer.MIN_VALUE, false);
@@ -212,7 +231,7 @@ final class FabulousMultiPlayer2 extends SampleGamer {
 					if(s.score > alpha){
 						alpha = s.score;
 					}
-					if(alpha >= beta){
+					if(prune && alpha >= beta){
 						pruned = true;
 						break;
 					}
@@ -246,7 +265,7 @@ final class FabulousMultiPlayer2 extends SampleGamer {
 	 * @return Worst score
 	 * @throws TimeoutException Time limit exceeded
 	 */
-	private Tuple minPlayer(MachineState state, Move move, int depth, long timeout, int alpha, int beta) throws TimeoutException{
+	private Tuple minPlayer(MachineState state, Move move, int depth, int alpha, int beta) throws TimeoutException{
 		if( System.currentTimeMillis() > timeout){
 			throw timeoutException;
 		}
@@ -286,7 +305,7 @@ final class FabulousMultiPlayer2 extends SampleGamer {
 				complete = false;
 				continue;
 			}
-			Tuple s = maxPlayer(nextState, depth - 1, timeout, alpha, beta);
+			Tuple s = maxPlayer(nextState, depth - 1, alpha, beta);
 			if(!s.complete){
 				complete = false;
 				//return new Tuple (Integer.MIN_VALUE, false);
@@ -302,7 +321,7 @@ final class FabulousMultiPlayer2 extends SampleGamer {
 					if(s.score <= beta){
 						beta = s.score;
 					}
-					if(alpha >= beta){
+					if(prune && alpha >= beta){
 						pruned = true;
 						break;
 					}
