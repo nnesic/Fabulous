@@ -30,7 +30,7 @@ final class FabulousMultiPlayer2 extends SampleGamer {
 	
 	private static final int TIME_MULT = 1;
 	
-	private static final int TIME_DIV = 4;
+	private static final int TIME_DIV = 10;
 
 	private static final ReferenceStrength SOFT = AbstractReferenceMap.ReferenceStrength.SOFT;
 
