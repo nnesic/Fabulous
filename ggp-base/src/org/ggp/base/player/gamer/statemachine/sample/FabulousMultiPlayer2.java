@@ -160,6 +160,7 @@ final class FabulousMultiPlayer2 extends SampleGamer {
 						tempScore = minPlayer (state, move, depth, alpha, beta);
 					} catch (TimeoutException e){
 						System.out.println("Ran out of time!");
+						notDone = true;
 						break Search;
 					}
 					if(!tempScore.complete){
