@@ -199,11 +199,8 @@ final class FabulousMultiPlayer2 extends SampleGamer {
 		if(depth == 0){
 			return new Tuple(Integer.MIN_VALUE, false, false);
 		}
-
-		if(! prune){
-			alpha = MIN_SCORE - 1;
-		}
-		//int bestScore = MIN_SCORE - 1;
+		
+		int bestScore = MIN_SCORE - 1;
 		//Move bestMove = null;
 		//boolean pruned = false;
 		boolean complete = true;
@@ -231,8 +228,11 @@ final class FabulousMultiPlayer2 extends SampleGamer {
 				}
 				 */
 				if(s.complete){
-					if(s.score > alpha){
-						alpha = s.score;
+					if(s.score > bestScore){
+						bestScore = s.score;
+					}
+					if(bestScore > alpha){
+						alpha = bestScore;
 					}
 					if(prune && alpha >= beta){
 						pruned = true;
@@ -247,9 +247,9 @@ final class FabulousMultiPlayer2 extends SampleGamer {
 		}
 
 		if(! foundOne){
-			alpha = Integer.MIN_VALUE;
+			bestScore = Integer.MIN_VALUE;
 		}
-		Tuple ret = new Tuple(alpha, complete, pruned);
+		Tuple ret = new Tuple(bestScore, complete, pruned);
 		if(complete && !pruned){
 			transposition.put(state, ret);
 		}
@@ -292,12 +292,9 @@ final class FabulousMultiPlayer2 extends SampleGamer {
 			options.add(moves);
 		}
 		Set<List<Move>> next = combinations(options);
-
-		if(! prune){
-			beta = MAX_SCORE + 1;
-		}
+		
 		MachineState nextState;
-		//int worstScore = MAX_SCORE + 1;
+		int worstScore = MAX_SCORE + 1;
 		boolean complete = true;
 		boolean foundOne = false;
 		boolean pruned = false;
@@ -324,8 +321,11 @@ final class FabulousMultiPlayer2 extends SampleGamer {
 				}
 				 */
 				if(s.complete){
-					if(s.score <= beta){
-						beta = s.score;
+					if(s.score < worstScore){
+						worstScore = s.score;
+					}
+					if(worstScore < beta){
+						beta = worstScore;
 					}
 					if(prune && alpha >= beta){
 						pruned = true;
@@ -340,9 +340,9 @@ final class FabulousMultiPlayer2 extends SampleGamer {
 		}
 
 		if(!foundOne){
-			beta = Integer.MIN_VALUE;
+			worstScore = Integer.MIN_VALUE;
 		}
-		return new Tuple (beta, complete, pruned);
+		return new Tuple (worstScore, complete, pruned);
 	}
 
 	/**
