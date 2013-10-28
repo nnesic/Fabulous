@@ -229,6 +229,7 @@ final class FabulousMultiPlayer2 extends SampleGamer {
 		boolean foundOne = false;
 		boolean pruned = false;
 		Move bestMove = null;
+		int alpha0 = alpha;
 		
 		Move firstTry = null;
 		if(transposition.containsKey(state) && transposition.get(state).move != null){
@@ -269,7 +270,7 @@ final class FabulousMultiPlayer2 extends SampleGamer {
 			moves = theMachine.getLegalMoves(state, role);
 		} catch (MoveDefinitionException e) {
 			System.err.println("No legal moves!");
-			return new Tuple(Integer.MIN_VALUE, false, false, alpha, beta, null);
+			return new Tuple(Integer.MIN_VALUE, false, false, alpha0, beta, null);
 		}
 		for(Move move : moves){
 			if(move.equals(firstTry)){
@@ -310,7 +311,7 @@ final class FabulousMultiPlayer2 extends SampleGamer {
 		if(! foundOne){
 			bestScore = Integer.MIN_VALUE;
 		}
-		Tuple ret = new Tuple(bestScore, complete, pruned, alpha, beta, bestMove);
+		Tuple ret = new Tuple(bestScore, complete, pruned, alpha0, beta, bestMove);
 		transposition.put(state, ret);
 		return ret;
 	}
@@ -357,6 +358,7 @@ final class FabulousMultiPlayer2 extends SampleGamer {
 		boolean complete = true;
 		boolean foundOne = false;
 		boolean pruned = false;
+		int beta0 = beta;
 		for(List<Move> moves : next){
 			//System.out.println("Expanding " + moves.get(0).toString());
 			moves.add(fabulous, move);
@@ -400,7 +402,7 @@ final class FabulousMultiPlayer2 extends SampleGamer {
 		if(!foundOne){
 			worstScore = Integer.MIN_VALUE;
 		}
-		return new Tuple (worstScore, complete, pruned, alpha, beta, null);
+		return new Tuple (worstScore, complete, pruned, alpha, beta0, null);
 	}
 
 	/**
