@@ -17,89 +17,117 @@ import org.ggp.base.util.statemachine.exceptions.MoveDefinitionException;
 import org.ggp.base.util.statemachine.exceptions.TransitionDefinitionException;
 
 /**
- * Class for storing information in the transition table.
+ * Fabulous Multiplayer
  * 
- * @author Nicolai
- *
- */
-class TableEntry{
-	protected int score;
-	protected boolean complete;
-	protected Move best;
-	
-	protected TableEntry(int score, boolean complete, Move best){
-		this.score = score;
-		this.complete = complete;
-		this.best = best;
-	}
-}
-
-/**
- * Fabulous Multiplayer with Minimax search.
- * 
- * @author Nicolai
+ * @author Nera, Nicolai
  *
  */
 final class FabulousMultiPlayer extends SampleGamer {
-	
+
 	private static final int MAX_SCORE = 100;
-	
+
 	private static final int MIN_SCORE = 0;
 	
-	private static final ReferenceStrength soft = AbstractReferenceMap.ReferenceStrength.SOFT;
+	private static final int TIME_MULT = 1;
 	
+	private static final int TIME_DIV = 10;
+
+	private static final ReferenceStrength SOFT = AbstractReferenceMap.ReferenceStrength.SOFT;
+
+	/**
+	 * Minimax internal node return value.
+	 * Holds a score and information about completeness of exploration.
+	 */
+	private class Tuple {
+		protected final int score;
+		protected final boolean complete;
+		protected final boolean pruned;
+		protected final int alpha;
+		protected final int beta;
+		protected final Move move;
+
+		protected Tuple (int score, boolean complete, boolean pruned, int alpha, int beta, Move move){
+			this.complete = complete;
+			this.score = score;
+			this.pruned = pruned;
+			this.alpha = alpha;
+			this.beta = beta;
+			this.move = move;
+		}
+	}
+
+	/**
+	 * Thrown if a timeout occurs during search.
+	 */
+	private class TimeoutException extends Throwable {
+		private static final long serialVersionUID = 7485356568086889532L;
+
+		public TimeoutException(){
+			super();
+		}
+	}
+
+	private final TimeoutException timeoutException = new TimeoutException();
+
+	private ReferenceMap<MachineState, Tuple> transposition;
+
 	private Role role;
-	
+
 	private StateMachine theMachine;
-	
-	private boolean done;
-	
+
 	private MachineState currentState;
 	
-	private ReferenceMap<MachineState, TableEntry> transposition;
+	private long timeout;
 	
-	//private int step;
+	private long turnpoint;
 	
+	private boolean prune;
+
 	@Override
 	public void setState(MachineState state){
 		currentState = state;
 	}
-	
+
+	@Override
+	public void stateMachineMetaGame(long timeout){
+		timeout -= 500;
+		this.timeout = timeout;
+		this.turnpoint = ((TIME_DIV - TIME_MULT) * System.currentTimeMillis() + TIME_MULT * timeout) / TIME_DIV;
+		theMachine = getStateMachine();
+		role = getRole();
+		transposition = new ReferenceMap<MachineState, Tuple>(SOFT, SOFT);
+		prune = false;
+		minimax(currentState);
+	}
+
 	@Override
 	public Move stateMachineSelectMove(long timeout) throws TransitionDefinitionException, MoveDefinitionException, GoalDefinitionException{
-		/*
-		step++;
-		if(step != 5){
-			return theMachine.getRandomMove(currentState, role);
-		}
-		*/
-		timeout -= 2000;
-		Move move = minimax(currentState, timeout);
+		timeout -= 500;
+		this.timeout = timeout;
+		this.turnpoint = 0;
+		prune = false;
+		Move move = minimax(currentState);
 		if(move != null){
 			return move;
 		}
+		System.out.println("Playing random move.");
 		return theMachine.getRandomMove(currentState, role);
 	}
-	
-	@Override
-	public void stateMachineMetaGame(long timeout){
-		timeout -= 2000;
-		theMachine = getStateMachine();
-		role = getRole();
-		transposition = new ReferenceMap<MachineState, TableEntry>(soft, soft);
-		//step = 0;
-		minimax(currentState, timeout);
-	}
-	
+
 	/**
-	 * Perform minimax search in a state.
+	 * Performs exhaustive minimax search in a state.
 	 * 
 	 * @param state Game state
 	 * @param timeout Time limit
-	 * @return Best move
+	 * @return Ideal move
 	 */
-	private Move minimax(MachineState state, long timeout){
-		//System.out.println("Exploring the root.");
+	private Move minimax(MachineState state){
+		if(transposition.containsKey(state) && transposition.get(state).complete){
+			Tuple lookup = transposition.get(state);
+			if(!lookup.pruned || (lookup.alpha == MIN_SCORE - 1 && lookup.beta == MAX_SCORE + 1)){
+				return lookup.move;
+			}
+		}
 		List<Move> moves;
 		try {
 			moves = theMachine.getLegalMoves(state, role);
@@ -107,124 +135,56 @@ final class FabulousMultiPlayer extends SampleGamer {
 			System.err.println("No legal moves!");
 			return null;
 		}
+		boolean notDone = true;
+		boolean pruned = false;
 		int depth = 1;	//Change to something high for testing with output!
 		int bestScore = MIN_SCORE - 1;
-		Move best =  null;
-		done = false;
-		while(! done){
-			if(System.currentTimeMillis() > timeout){
-				System.out.println("Ran out of time!");
-				done = false;
-				break;
-			}
-			depth++;
-			done = true;
-			int alpha = MIN_SCORE - 1;
-			int beta = MAX_SCORE + 1;
-			bestScore = MIN_SCORE - 1;  /////Added this here
-			for(Move move : moves){
-				//System.out.println("Expanding " + move.toString());
-				int s;
-				try {
-					s = minPlayer(state, move, depth, timeout, alpha, beta);
-				} catch (MoveDefinitionException e) {
-					System.err.println("No legal moves!");
-					done = false;
-					continue;
+		Move bestMove =  null;
+		Search:
+			while(notDone){
+				if(System.currentTimeMillis() > timeout){
+					System.out.println("Ran out of time!");
+					break;
 				}
-				//System.out.println("Returned score of " + s);
-				if(s != MAX_SCORE + 1){
-					if(s > bestScore){
-						bestScore = s;
-						best = move;
+				depth++;
+				if(System.currentTimeMillis() > turnpoint){
+					prune = true;
+				}
+				int alpha = MIN_SCORE - 1;
+				int beta = MAX_SCORE + 1;
+				notDone = false;
+				pruned = false;
+				for (Move move: moves){
+					Tuple tempScore = new Tuple(bestScore, false, false, alpha, beta, move);
+					try {
+						tempScore = minPlayer (state, move, depth, alpha, beta);
+					} catch (TimeoutException e){
+						System.out.println("Ran out of time!");
+						notDone = true;
+						break Search;
 					}
-					if(s > alpha){
-						alpha = s;
+					if(!tempScore.complete){
+						notDone = true;
+					}
+					else{
+						if(tempScore.score > bestScore){
+							bestScore = tempScore.score;
+							bestMove = move;
+						}
+						if(tempScore.score > alpha){
+							alpha = tempScore.score;
+						}
+					}
+					if(tempScore.pruned){
+						pruned = true;
 					}
 				}
 			}
-		}
-		if(done){
-			transposition.put(state, new TableEntry(bestScore, true, best));
-		}
-		else{
-			transposition.put(state, new TableEntry(bestScore, false, best));
-		}
-		//System.out.println("Choose " + best.toString());
-		return best;
+		transposition.put(state, new Tuple(bestScore, ! notDone, pruned, MIN_SCORE - 1, MAX_SCORE + 1, bestMove));
+		//System.out.println("Done. Depth: " + depth);
+		return bestMove;
 	}
-	
-	/**
-	 * Recursively performs minimax search (min-player move)
-	 * 
-	 * @param state Game state
-	 * @param move Move done by the max player
-	 * @param depth Depth limit
-	 * @param timeout Time limit
-	 * @param alpha Alpha value
-	 * @param beta Beta value
-	 * @return Score value
-	 * @throws MoveDefinitionException Found no legal moves
-	 */
-	private int minPlayer(MachineState state, Move move, int depth, long timeout, int alpha, int beta) throws MoveDefinitionException{
-		//System.out.println("Exploring a min-player node.");
-		List<Move[]> options = new ArrayList<Move[]>();
-		List<Role> roles = theMachine.getRoles();
-		int fabulous = 0;
-		for(int i = 0; i < roles.size(); i++){
-			Role player = roles.get(i);
-			if(player.equals(role)){
-				fabulous = i;
-				continue;
-			}
-			List<Move> moves = theMachine.getLegalMoves(state, player);
-			Move[] pmoves = new Move[moves.size()];
-			for(int j = 0; j < moves.size(); j++){
-				pmoves[j] = moves.get(j);
-			}
-			options.add(pmoves);
-		}
-		Set<List<Move>> next = combinations(options);
-		MachineState nextState;
-		int worstScore = MAX_SCORE + 1;
-		for(List<Move> moves : next){
-			//System.out.println("Expanding " + moves.get(0).toString());
-			moves.add(fabulous, move);
-			try {
-				nextState = theMachine.getNextState(state, moves);
-			} catch (TransitionDefinitionException e) {
-				System.err.println("Attempted bad moves!");
-				done = false;
-				continue;
-			}
-			int s;
-			try {
-				s = maxPlayer(nextState, depth - 1, timeout, alpha, beta);
-			} catch (GoalDefinitionException e) {
-				System.err.println("Bad goal definition!");
-				done = false;
-				continue;
-			}
-			if(s == Integer.MIN_VALUE){
-				break;
-			}
-			if(s != MIN_SCORE - 1){
-				if(s < worstScore){
-					worstScore = s;
-				}
-				if(s < beta){
-					beta = s;
-					if(alpha >= beta){
-						//System.out.println("Pruning.");
-						break;
-					}
-				}
-			}
-		}
-		//System.out.println("Returning a score of " + worstScore);
-		return worstScore;
-	}
-	
+
 	/**
 	 * Recursively performs minimax search (max-player move)
 	 * 
@@ -233,102 +193,248 @@ final class FabulousMultiPlayer extends SampleGamer {
 	 * @param timeout Time limit
 	 * @param alpha Alpha value
 	 * @param beta Beta value
-	 * @return Score value
-	 * @throws MoveDefinitionException Found no legal moves
-	 * @throws GoalDefinitionException Bad goal definition
+	 * @return Best score
+	 * @throws TimeoutException Time limit exceeded
 	 */
-	private int maxPlayer(MachineState state, int depth, long timeout, int alpha, int beta) throws MoveDefinitionException, GoalDefinitionException{
-		//System.out.println("Exploring a max-player node.");
+	private Tuple maxPlayer(MachineState state, int depth, int alpha, int beta) throws TimeoutException{
+		if(System.currentTimeMillis() > timeout){
+			throw timeoutException;
+		}
 		if(theMachine.isTerminal(state)){
-			//System.out.println("Found a goal of value " + theMachine.getGoal(state, role));
-			return theMachine.getGoal(state, role);
+			Tuple ret;
+			try {
+				ret = new Tuple(theMachine.getGoal(state, role), true, false, alpha, beta, null);
+			} catch (GoalDefinitionException e) {
+				System.err.println("Bad goal description!");
+				ret = new Tuple(Integer.MIN_VALUE, false, false, alpha, beta, null);
+			}
+			//System.out.println("Found a goal of value " + ret.score);
+			transposition.put(state, ret);
+			return ret;
 		}
 		if(transposition.containsKey(state) && transposition.get(state).complete){
-			//System.out.println("Found score of " + transposition.get(state).score + " in the transposition table.");
-			return transposition.get(state).score;
+			Tuple lookup = transposition.get(state);
+			if(! lookup.pruned || (lookup.alpha <= alpha && lookup.beta >= beta)){
+				return transposition.get(state);
+			}
 		}
-		if(depth == 0 || System.currentTimeMillis() > timeout){
-			done = false;
-			return Integer.MIN_VALUE;
+		if(depth == 0){
+			return new Tuple(Integer.MIN_VALUE, false, false, alpha, beta, null);
 		}
+		
 		int bestScore = MIN_SCORE - 1;
-		Move best = null;
+		//Move bestMove = null;
+		//boolean pruned = false;
+		boolean complete = true;
+		boolean foundOne = false;
 		boolean pruned = false;
-		/*if(transposition.containsKey(state) && transposition.get(state).best != null){
-			best = transposition.get(state).best;
-			//System.out.println("Expanding " + best.toString());
-			int s = minPlayer(state, best, depth, timeout, alpha, beta);
-			if(s != MAX_SCORE + 1){
-				bestScore = s;
-				if(s > alpha){
-					alpha = s;
-					if(alpha >= beta){
-						//System.out.println("Pruning.");
+		Move bestMove = null;
+		int alpha0 = alpha;
+		
+		Move firstTry = null;
+		if(transposition.containsKey(state) && transposition.get(state).move != null){
+			firstTry = transposition.get(state).move;
+			Tuple s = minPlayer(state, firstTry, depth, alpha, beta);
+			if(!s.complete){
+				complete = false;
+				//return new Tuple (Integer.MIN_VALUE, false);
+			}	
+			if(s.pruned){
+				pruned = true;
+			}
+			if(s.score != Integer.MIN_VALUE){
+				foundOne = true;
+				/*
+				if(s.score > bestScore){
+					bestScore = s.score;
+					//bestMove = move;
+				}
+				 */
+				if(s.complete){
+					if(s.score > bestScore){
+						bestScore = s.score;
+						bestMove = firstTry;
+					}
+					if(bestScore > alpha){
+						alpha = bestScore;
+					}
+					if(prune && alpha >= beta){
 						pruned = true;
 					}
 				}
 			}
-		}*/
-		if(! pruned){
-			List<Move> moves = theMachine.getLegalMoves(state, role);
-			for(Move move : moves){
-				if(move.equals(best)){
-					continue;
+		}
+		
+		List<Move> moves;
+		try {
+			moves = theMachine.getLegalMoves(state, role);
+		} catch (MoveDefinitionException e) {
+			System.err.println("No legal moves!");
+			return new Tuple(Integer.MIN_VALUE, false, false, alpha0, beta, null);
+		}
+		for(Move move : moves){
+			if(move.equals(firstTry)){
+				continue;
+			}
+			Tuple s = minPlayer(state, move, depth, alpha, beta);
+			if(!s.complete){
+				complete = false;
+				//return new Tuple (Integer.MIN_VALUE, false);
+			}	
+			if(s.pruned){
+				pruned = true;
+			}
+			if(s.score != Integer.MIN_VALUE){
+				foundOne = true;
+				/*
+				if(s.score > bestScore){
+					bestScore = s.score;
+					//bestMove = move;
 				}
-				//System.out.println("Expanding " + move.toString());
-				int s = minPlayer(state, move, depth, timeout, alpha, beta);
-				if(s != MAX_SCORE + 1){
-					if(s > bestScore){
-						bestScore = s;
-						best = move;
+				 */
+				if(s.complete){
+					if(s.score > bestScore){
+						bestScore = s.score;
+						bestMove = move;
 					}
-					if(s > alpha){
-						alpha = s;
-						if(alpha >= beta){
-							//System.out.println("Pruning.");
-							pruned = true;
-							break;
-						}
+					if(bestScore > alpha){
+						alpha = bestScore;
+					}
+					if(prune && alpha >= beta){
+						pruned = true;
+						break;
 					}
 				}
 			}
 		}
-		if(done && ! pruned){
-			transposition.put(state, new TableEntry(bestScore, true, best));
+
+		if(! foundOne){
+			bestScore = Integer.MIN_VALUE;
 		}
-		else{
-			transposition.put(state, new TableEntry(bestScore, false, best));
-		}
-		//System.out.println("Returning a score of " + bestScore);
-		return bestScore;
+		Tuple ret = new Tuple(bestScore, complete, pruned, alpha0, beta, bestMove);
+		transposition.put(state, ret);
+		return ret;
 	}
-	
+
 	/**
-	 * Creates all combinations of moves for the opposing players.
+	 * Recursively performs minimax search (min-player move)
 	 * 
-	 * @param moves List of arrays of possible moves for each opponent (in the order of the roles)
-	 * @return Set containing all possible combinations of moves (in the order of the roles)
+	 * @param state Game state
+	 * @param move Max-player's move
+	 * @param depth Depth limit
+	 * @param timeout Time limit
+	 * @param alpha Alpha value
+	 * @param beta Beta value
+	 * @return Worst score
+	 * @throws TimeoutException Time limit exceeded
 	 */
-	private Set<List<Move>> combinations(List<Move[]> moves){
+	private Tuple minPlayer(MachineState state, Move move, int depth, int alpha, int beta) throws TimeoutException{
+		if( System.currentTimeMillis() > timeout){
+			throw timeoutException;
+		}
+
+		List<List<Move>> options = new ArrayList<List<Move>>();
+		List<Role> roles = theMachine.getRoles();
+		int fabulous = 0;
+		for(int i = 0; i < roles.size(); i++){
+			Role player = roles.get(i);
+			if(player.equals(role)){
+				fabulous = i;
+				continue;
+			}
+			List<Move> moves;
+			try {
+				moves = theMachine.getLegalMoves(state, player);
+			} catch (MoveDefinitionException e) {
+				System.err.println("No legal moves!");
+				moves = new ArrayList<Move>();
+			}
+			options.add(moves);
+		}
+		Set<List<Move>> next = combinations(options);
+		
+		MachineState nextState;
+		int worstScore = MAX_SCORE + 1;
+		boolean complete = true;
+		boolean foundOne = false;
+		boolean pruned = false;
+		int beta0 = beta;
+		for(List<Move> moves : next){
+			//System.out.println("Expanding " + moves.get(0).toString());
+			moves.add(fabulous, move);
+			try {
+				nextState = theMachine.getNextState(state, moves);
+			} catch (TransitionDefinitionException e) {
+				System.err.println("Attempted bad moves!");
+				complete = false;
+				continue;
+			}
+			Tuple s = maxPlayer(nextState, depth - 1, alpha, beta);
+			if(!s.complete){
+				complete = false;
+				//return new Tuple (Integer.MIN_VALUE, false);
+			}
+			if(s.pruned){
+				pruned = true;
+			}
+			if(s.score != Integer.MIN_VALUE){
+				foundOne = true;
+				/*
+				if(s.score < worstScore){
+					worstScore = s.score;
+				}
+				 */
+				if(s.complete){
+					if(s.score < worstScore){
+						worstScore = s.score;
+					}
+					if(worstScore < beta){
+						beta = worstScore;
+					}
+					if(prune && alpha >= beta){
+						pruned = true;
+						break;
+					}
+				}
+			}
+		}
+
+		if(!foundOne){
+			worstScore = Integer.MIN_VALUE;
+		}
+		return new Tuple (worstScore, complete, pruned, alpha, beta0, null);
+	}
+
+	/**
+	 * Creates all combinations of moves for opposing players.
+	 * 
+	 * @param moves List of all possible moves for all opposing player (in order)
+	 * @return Set of combinations of one move per opposing player (maintains order)
+	 */
+	private Set<List<Move>> combinations(List<List<Move>> moves){
 		Set<List<Move>> ret = new HashSet<List<Move>>();
 		if(moves.size() == 0){
 			return ret;
 		}
 		int num = 1;
-		for(Move[] m : moves){
-			num *= m.length;
+		for(List<Move> l : moves){
+			num *= l.size();
 		}
 		for(int i = 0; i < num; i++){
 			int tmp = i;
 			List<Move> combination = new ArrayList<Move>();
 			for(int r = 0; r < moves.size(); r++){
-				Move[] m = moves.get(r);
-				combination.add(m[tmp % m.length]);
-				tmp /= m.length;
+				List<Move> l = moves.get(r);
+				if(l.size() == 0){
+					combination.add(null);
+					continue;
+				}
+				combination.add(l.get(tmp % l.size()));
+				tmp /= l.size();
 			}
 			ret.add(combination);
 		}
 		return ret;
 	}
-	
+
 }
