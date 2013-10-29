@@ -48,7 +48,7 @@ final class FabulousMultiPlayer2 extends SampleGamer {
 		protected final Move move;
 		//protected final List <Move> moves;
 
-		protected Tuple (int score, boolean complete, boolean pruned, int alpha, int beta, Move move){
+		protected Tuple(int score, boolean complete, boolean pruned, int alpha, int beta, Move move){
 			this.complete = complete;
 			this.score = score;
 			this.pruned = pruned;
@@ -124,7 +124,6 @@ final class FabulousMultiPlayer2 extends SampleGamer {
 	 * Performs exhaustive minimax search in a state.
 	 * 
 	 * @param state Game state
-	 * @param timeout Time limit
 	 * @return Ideal move
 	 */
 	private Move minimax(MachineState state){
@@ -160,7 +159,7 @@ final class FabulousMultiPlayer2 extends SampleGamer {
 				int beta = MAX_SCORE + 1;
 				notDone = false;
 				pruned = false;
-				for (Move move: moves){
+				for(Move move: moves){
 					Tuple tempScore = new Tuple(bestScore, false, false, alpha, beta, move);
 					try {
 						tempScore = minPlayer (state, move, depth, alpha, beta);
@@ -196,7 +195,6 @@ final class FabulousMultiPlayer2 extends SampleGamer {
 	 * 
 	 * @param state Game state
 	 * @param depth Depth limit
-	 * @param timeout Time limit
 	 * @param alpha Alpha value
 	 * @param beta Beta value
 	 * @return Best score
@@ -322,11 +320,7 @@ final class FabulousMultiPlayer2 extends SampleGamer {
 			bestScore = Integer.MIN_VALUE;
 		}
 		Tuple ret = new Tuple(bestScore, complete, pruned, alpha0, beta, bestMove);
-		
-			transposition.put(state, ret);
-		
-		
-
+		transposition.put(state, ret);
 		return ret;
 	}
 
@@ -336,14 +330,13 @@ final class FabulousMultiPlayer2 extends SampleGamer {
 	 * @param state Game state
 	 * @param move Max-player's move
 	 * @param depth Depth limit
-	 * @param timeout Time limit
 	 * @param alpha Alpha value
 	 * @param beta Beta value
 	 * @return Worst score
 	 * @throws TimeoutException Time limit exceeded
 	 */
 	private Tuple minPlayer(MachineState state, Move move, int depth, int alpha, int beta) throws TimeoutException{
-		if( System.currentTimeMillis() > timeout){
+		if(System.currentTimeMillis() > timeout){
 			throw timeoutException;
 		}
 
@@ -432,14 +425,9 @@ final class FabulousMultiPlayer2 extends SampleGamer {
 		
 		Tuple ret = new Tuple(worstScore, complete, pruned, alpha, beta0, null);
 		if (! transpositionMin.containsKey(state)){
-			
-			transpositionMin.put(state, new ReferenceMap<Move, FabulousMultiPlayer2.Tuple>());
-			
-						
+			transpositionMin.put(state, new ReferenceMap<Move, FabulousMultiPlayer2.Tuple>());		
 		}
-		
 		transpositionMin.get(state).put(move, ret);
-
 		/*
 		else {
 			if (transpositionMin.get(state).containsKey(move)){

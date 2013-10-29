@@ -118,7 +118,6 @@ final class FabulousMultiPlayer extends SampleGamer {
 	 * Performs exhaustive minimax search in a state.
 	 * 
 	 * @param state Game state
-	 * @param timeout Time limit
 	 * @return Ideal move
 	 */
 	private Move minimax(MachineState state){
@@ -190,7 +189,6 @@ final class FabulousMultiPlayer extends SampleGamer {
 	 * 
 	 * @param state Game state
 	 * @param depth Depth limit
-	 * @param timeout Time limit
 	 * @param alpha Alpha value
 	 * @param beta Beta value
 	 * @return Best score
@@ -322,7 +320,6 @@ final class FabulousMultiPlayer extends SampleGamer {
 	 * @param state Game state
 	 * @param move Max-player's move
 	 * @param depth Depth limit
-	 * @param timeout Time limit
 	 * @param alpha Alpha value
 	 * @param beta Beta value
 	 * @return Worst score
