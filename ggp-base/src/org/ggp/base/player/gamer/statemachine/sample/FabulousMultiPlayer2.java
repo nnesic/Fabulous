@@ -352,57 +352,8 @@ final class FabulousMultiPlayer2 extends SampleGamer {
 			/*if( lookup.pruned && (alpha >=lookup.score )){
 				return lookup;
 			}	*/			
-			if(lookup.alpha <= alpha && lookup.beta >= beta){
+			if (lookup.alpha <= alpha && lookup.beta >= beta){
 				return lookup;				
-			}
-		}
-		
-		MachineState nextState = null;
-		int worstScore = MAX_SCORE + 1;
-		boolean complete = true;
-		boolean foundOne = false;
-		boolean pruned = false;
-		int beta0 = beta;
-		List<Move> bestMoves = null;
-		List<Move> firstTry = null;
-		if(transpositionMin.containsKey(state) && transpositionMin.get(state).containsKey(move) && transpositionMin.get(state).get(move).moves != null){
-			firstTry = transpositionMin.get(state).get(move).moves;
-			try {
-				nextState = theMachine.getNextState(state, firstTry);
-			} catch (TransitionDefinitionException e) {
-				System.err.println("Attempted bad moves!");
-				complete = false;
-			}
-			if(nextState != null){
-				Tuple s = maxPlayer(nextState, depth - 1, alpha, beta);
-				if(!s.complete){
-					complete = false;
-					//return new Tuple (Integer.MIN_VALUE, false);
-				}
-				if(s.pruned){
-					pruned = true;
-				}
-				if(s.score != Integer.MIN_VALUE){
-					foundOne = true;
-					/*
-					if(s.score < worstScore){
-						worstScore = s.score;
-					}
-					 */
-					//if(s.complete){
-					if(s.score < worstScore){
-						worstScore = s.score;
-	
-					}
-					if(worstScore < beta){
-						beta = worstScore;
-						bestMoves = firstTry;
-					}
-					if(prune && alpha >= beta){
-						pruned = true;
-					}
-					//}
-				}
 			}
 		}
 
@@ -425,13 +376,17 @@ final class FabulousMultiPlayer2 extends SampleGamer {
 			options.add(moves);
 		}
 		Set<List<Move>> next = combinations(options);
-		
+
+		MachineState nextState;
+		int worstScore = MAX_SCORE + 1;
+		boolean complete = true;
+		boolean foundOne = false;
+		boolean pruned = false;
+		int beta0 = beta;
+		List <Move> bestMoves = null;
 		for(List<Move> moves : next){
 			//System.out.println("Expanding " + moves.get(0).toString());
 			moves.add(fabulous, move);
-			if(moves.equals(firstTry)){
-				continue;
-			}
 			try {
 				nextState = theMachine.getNextState(state, moves);
 			} catch (TransitionDefinitionException e) {
