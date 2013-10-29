@@ -17,7 +17,7 @@ public final class FabulousPlayer extends SampleGamer {
 	
 	private final SampleGamer singlePlayer = new FabulousSinglePlayer();
 	
-	private final SampleGamer multiPlayer = new FabulousMultiPlayer();
+	private final SampleGamer multiPlayer = new FabulousMultiPlayer2();
 	
 	private SampleGamer currentPlayer;
 	
