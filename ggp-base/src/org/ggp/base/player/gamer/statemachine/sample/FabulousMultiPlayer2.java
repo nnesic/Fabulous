@@ -224,7 +224,7 @@ final class FabulousMultiPlayer2 extends SampleGamer {
 				return lookup;
 			}*/
 
-			if (lookup.alpha <= alpha && lookup.beta >= beta){
+			if(lookup.alpha <= alpha && lookup.beta >= beta){
 				return lookup;
 			}
 		}
