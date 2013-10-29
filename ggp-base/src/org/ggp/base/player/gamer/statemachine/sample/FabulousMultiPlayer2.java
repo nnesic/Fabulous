@@ -453,7 +453,7 @@ final class FabulousMultiPlayer2 extends SampleGamer {
 			}
 
 		}*/
-		transpositionMin.get(state).put(move, ret);
+		//transpositionMin.get(state).put(move, ret);
 		return ret;
 	}
 
