@@ -171,7 +171,10 @@ final class FabulousMultiPlayer2 extends SampleGamer {
 					if(!tempScore.complete){
 						notDone = true;
 					}
-					else{
+					if(tempScore.pruned){
+						pruned = true;
+					}
+					if(tempScore.score != Integer.MIN_VALUE){
 						if(tempScore.score > bestScore){
 							bestScore = tempScore.score;
 							bestMove = move;
@@ -179,9 +182,6 @@ final class FabulousMultiPlayer2 extends SampleGamer {
 						if(tempScore.score > alpha){
 							alpha = tempScore.score;
 						}
-					}
-					if(tempScore.pruned){
-						pruned = true;
 					}
 				}
 			}
@@ -258,18 +258,18 @@ final class FabulousMultiPlayer2 extends SampleGamer {
 					//bestMove = move;
 				}
 				 */
-				if(s.complete){
-					if(s.score > bestScore){
-						bestScore = s.score;
-						bestMove = firstTry;
-					}
-					if(bestScore > alpha){
-						alpha = bestScore;
-					}
-					if(prune && alpha >= beta){
-						pruned = true;
-					}
+				//if(s.complete){
+				if(s.score > bestScore){
+					bestScore = s.score;
+					bestMove = firstTry;
 				}
+				if(bestScore > alpha){
+					alpha = bestScore;
+				}
+				if(prune && alpha >= beta){
+					pruned = true;
+				}
+				//}
 			}
 		}
 
@@ -403,18 +403,18 @@ final class FabulousMultiPlayer2 extends SampleGamer {
 				}
 				 */
 				//if(s.complete){
-					if(s.score < worstScore){
-						worstScore = s.score;
+				if(s.score < worstScore){
+					worstScore = s.score;
 
-					}
-					if(worstScore < beta){
-						beta = worstScore;
-						//bestMoves = moves;
-					}
-					if(prune && alpha >= beta){
-						pruned = true;
-						break;
-					}
+				}
+				if(worstScore < beta){
+					beta = worstScore;
+					//bestMoves = moves;
+				}
+				if(prune && alpha >= beta){
+					pruned = true;
+					break;
+				}
 				//}
 			}
 		}
