@@ -458,7 +458,7 @@ final class FabulousMultiPlayer2 extends SampleGamer {
 		}
 		int num = 1;
 		for(List<Move> l : moves){
-			num *= l.size();
+			num *= (l.size() == 0) ? 1 : l.size();
 		}
 		for(int i = 0; i < num; i++){
 			int tmp = i;
