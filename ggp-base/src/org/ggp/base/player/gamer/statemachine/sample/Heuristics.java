@@ -72,7 +72,7 @@ public class Heuristics {
 	 * @param transposition Transposition table
 	 * @return Heuristic value
 	 */
-	public int evaluate_novelty(MachineState state,  Map<MachineState, ?> transposition ){
+	public int evaluate_novelty(MachineState state, Map<MachineState, ?> transposition){
 		if(transposition.containsKey(state)){
 			return MIN_HEURISTIC;
 		}

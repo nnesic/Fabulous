@@ -40,7 +40,7 @@ final class FabulousMultiPlayer2 extends SampleGamer {
 	 * Minimax internal node return value.
 	 * Holds a score and information about completeness of exploration.
 	 */
-	protected class Tuple {
+	private class Tuple {
 		protected final int score;
 		protected final boolean complete;
 		protected final boolean pruned;
@@ -105,9 +105,9 @@ final class FabulousMultiPlayer2 extends SampleGamer {
 		theMachine = getStateMachine();
 		role = getRole();
 		transposition = new ReferenceMap<MachineState, Tuple>(SOFT, SOFT);
-		transpositionMin = new ReferenceMap <MachineState, Map <Move, Tuple>> (SOFT,SOFT);
+		transpositionMin = new ReferenceMap <MachineState, Map <Move, Tuple>> (SOFT, SOFT);
+		heuristic = new Heuristics(theMachine);
 		prune = false;
-		heuristic = new  Heuristics(theMachine);
 		minimax(currentState);
 	}
 
@@ -126,10 +126,10 @@ final class FabulousMultiPlayer2 extends SampleGamer {
 	}
 
 	/**
-	 * Performs exhaustive minimax search in a state.
+	 * Performs minimax search in a state.
 	 * 
 	 * @param state Game state
-	 * @return Ideal move
+	 * @return Best move
 	 */
 	private Move minimax(MachineState state){
 		if(transposition.containsKey(state) && transposition.get(state).complete){
