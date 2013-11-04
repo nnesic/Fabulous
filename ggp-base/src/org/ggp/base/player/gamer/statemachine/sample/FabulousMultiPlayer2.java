@@ -1,11 +1,8 @@
 package org.ggp.base.player.gamer.statemachine.sample;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
-
 import org.apache.commons.collections4.map.AbstractReferenceMap;
 import org.apache.commons.collections4.map.ReferenceMap;
 import org.apache.commons.collections4.map.AbstractReferenceMap.ReferenceStrength;
@@ -376,7 +373,7 @@ final class FabulousMultiPlayer2 extends SampleGamer {
 			}
 			options.add(moves);
 		}
-		Set<List<Move>> next = combinations(options);
+		List<List<Move>> next = combinations(options);
 
 		MachineState nextState;
 		int worstScore = MAX_SCORE + 1;
@@ -457,10 +454,10 @@ final class FabulousMultiPlayer2 extends SampleGamer {
 	 * Creates all combinations of moves for opposing players.
 	 * 
 	 * @param moves List of all possible moves for all opposing player (in order)
-	 * @return Set of combinations of one move per opposing player (maintains order)
+	 * @return List of combinations of one move per opposing player (maintains order)
 	 */
-	public static Set<List<Move>> combinations(List<List<Move>> moves){
-		Set<List<Move>> ret = new HashSet<List<Move>>();
+	public static List<List<Move>> combinations(List<List<Move>> moves){
+		List<List<Move>> ret = new ArrayList<List<Move>>();
 		if(moves.size() == 0){
 			return ret;
 		}

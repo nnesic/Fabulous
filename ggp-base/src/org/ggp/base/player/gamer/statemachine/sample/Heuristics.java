@@ -1,5 +1,6 @@
 package org.ggp.base.player.gamer.statemachine.sample;
 
+import java.util.List;
 import java.util.Map;
 
 import org.ggp.base.util.statemachine.*;
@@ -18,11 +19,16 @@ public class Heuristics {
 	
 	private final StateMachine theMachine;
 	
+	private int maxMoves = 1;
+	
+	private int maxOppMoves;
+	
 	/**
 	 * @param machine State machine of the game
 	 */
 	public Heuristics(StateMachine machine){
 		theMachine = machine;
+		maxOppMoves = 1;
 	}
 	
 	/**
@@ -45,8 +51,6 @@ public class Heuristics {
 	public int evaluate_dummy(){
 		return (MAX_HEURISTIC + MIN_HEURISTIC) / 2;
 	}
-	
-	private int maxMoves = 1;
 	
 	/**
 	 * Evaluation function using the mobility metric.
@@ -79,6 +83,26 @@ public class Heuristics {
 		else{
 			return MAX_HEURISTIC;
 		}
+	}
+	
+	/**
+	 * Evaluation function using opponents' mobility.
+	 * 
+	 * @param moves List of opponents' possible moves
+	 * @return Heuristic value
+	 */
+	public int evaluate_opponentMobility(List<List<Move>> moves){
+		int c = 0;
+		for(List<Move> l : moves){
+			c += l.size();
+		}
+		if(c > maxOppMoves){
+			maxOppMoves = c;
+			return MAX_HEURISTIC;
+		}
+		c *= (MAX_HEURISTIC - MIN_HEURISTIC);
+		c /= maxOppMoves;
+		return MIN_HEURISTIC + c;
 	}
 	
 }
