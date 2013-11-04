@@ -1,7 +1,6 @@
 package org.ggp.base.player.gamer.statemachine.sample;
 
 import org.apache.commons.collections4.map.ReferenceMap;
-import org.ggp.base.player.gamer.statemachine.sample.FabulousMultiPlayer2.Tuple;
 import org.ggp.base.util.statemachine.*;
 
 /**
@@ -54,15 +53,21 @@ public class Heuristics {
 		return MIN_HEURISTIC + moves;
 	}
 	
-	public int evaluate_novelty(MachineState state,  ReferenceMap<MachineState, Tuple> transposition ){
+	/**
+	 * Evaluation function using the novelty metric.
+	 * Basic implementation, only checks for exact matches.
+	 * 
+	 * @param state Current state
+	 * @param transposition Transposition table
+	 * @return Heuristic value
+	 */
+	public int evaluate_novelty(MachineState state,  ReferenceMap<MachineState, ?> transposition ){
 		if(transposition.containsKey(state)){
 			return MIN_HEURISTIC;
 		}
 		else{
 			return MAX_HEURISTIC;
 		}
-		
-		
 	}
 	
 }
