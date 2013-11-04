@@ -35,6 +35,7 @@ final class FabulousMultiPlayer2 extends SampleGamer {
 
 	private static final ReferenceStrength SOFT = AbstractReferenceMap.ReferenceStrength.SOFT;
 
+	
 	/**
 	 * Minimax internal node return value.
 	 * Holds a score and information about completeness of exploration.
@@ -87,6 +88,9 @@ final class FabulousMultiPlayer2 extends SampleGamer {
 	private long turnpoint;
 
 	private boolean prune;
+	
+	private Heuristics heuristic;
+	
 
 	@Override
 	public void setState(MachineState state){
@@ -103,6 +107,7 @@ final class FabulousMultiPlayer2 extends SampleGamer {
 		transposition = new ReferenceMap<MachineState, Tuple>(SOFT, SOFT);
 		transpositionMin = new ReferenceMap <MachineState, Map <Move, Tuple>> (SOFT,SOFT);
 		prune = false;
+		heuristic = new  Heuristics(theMachine);
 		minimax(currentState);
 	}
 
@@ -226,8 +231,17 @@ final class FabulousMultiPlayer2 extends SampleGamer {
 				return lookup;
 			}
 		}
-		if(depth == 0){
+		
+		List<Move> moves;
+		try {
+			moves = theMachine.getLegalMoves(state, role);
+		} catch (MoveDefinitionException e) {
+			System.err.println("No legal moves!");
 			return new Tuple(Integer.MIN_VALUE, false, false, alpha, beta, null);
+		}
+		
+		if(depth == 0){
+			return new Tuple(heuristic.evaluate_mobility(moves.size()), false, false, alpha, beta, null);
 		}
 
 		int bestScore = MIN_SCORE - 1;
@@ -273,13 +287,7 @@ final class FabulousMultiPlayer2 extends SampleGamer {
 			}
 		}
 
-		List<Move> moves;
-		try {
-			moves = theMachine.getLegalMoves(state, role);
-		} catch (MoveDefinitionException e) {
-			System.err.println("No legal moves!");
-			return new Tuple(Integer.MIN_VALUE, false, false, alpha0, beta, null);
-		}
+		
 		for(Move move : moves){
 			if(move.equals(firstTry)){
 				continue;
