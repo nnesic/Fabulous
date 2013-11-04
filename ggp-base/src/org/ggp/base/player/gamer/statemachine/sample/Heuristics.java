@@ -1,6 +1,7 @@
 package org.ggp.base.player.gamer.statemachine.sample;
 
-import org.apache.commons.collections4.map.ReferenceMap;
+import java.util.Map;
+
 import org.ggp.base.util.statemachine.*;
 
 /**
@@ -22,6 +23,16 @@ public class Heuristics {
 	 */
 	public Heuristics(StateMachine machine){
 		theMachine = machine;
+	}
+	
+	/**
+	 * Inverts the result of an evaluation function.
+	 * 
+	 * @param value Evaluation function output
+	 * @return Inverted heuristic value
+	 */
+	public int inverse(int value){
+		return MIN_HEURISTIC + MAX_HEURISTIC - value;
 	}
 	
 	/**
@@ -61,7 +72,7 @@ public class Heuristics {
 	 * @param transposition Transposition table
 	 * @return Heuristic value
 	 */
-	public int evaluate_novelty(MachineState state,  ReferenceMap<MachineState, ?> transposition ){
+	public int evaluate_novelty(MachineState state,  Map<MachineState, ?> transposition ){
 		if(transposition.containsKey(state)){
 			return MIN_HEURISTIC;
 		}
