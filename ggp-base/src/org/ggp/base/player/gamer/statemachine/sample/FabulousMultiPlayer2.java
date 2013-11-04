@@ -39,7 +39,7 @@ final class FabulousMultiPlayer2 extends SampleGamer {
 	 * Minimax internal node return value.
 	 * Holds a score and information about completeness of exploration.
 	 */
-	private class Tuple {
+	protected class Tuple {
 		protected final int score;
 		protected final boolean complete;
 		protected final boolean pruned;
