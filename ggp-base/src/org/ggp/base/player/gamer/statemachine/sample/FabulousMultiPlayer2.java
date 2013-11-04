@@ -74,7 +74,7 @@ final class FabulousMultiPlayer2 extends SampleGamer {
 
 	private ReferenceMap<MachineState, Tuple> transposition;
 
-	private  ReferenceMap <MachineState, Map <Move, Tuple>> transpositionMin;
+	private ReferenceMap <MachineState, Map <Move, Tuple>> transpositionMin;
 
 	private Role role;
 

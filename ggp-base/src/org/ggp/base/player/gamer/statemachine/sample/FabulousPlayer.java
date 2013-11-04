@@ -27,7 +27,7 @@ public final class FabulousPlayer extends SampleGamer {
 		System.out.println();
 		StateMachine m = getStateMachine();
 		int roles = m.getRoles().size();
-		if (roles == 1){
+		if(roles == 1){
 			currentPlayer = singlePlayer;
 		}
 		else{
