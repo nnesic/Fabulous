@@ -451,7 +451,7 @@ final class FabulousMultiPlayer2 extends SampleGamer {
 	 * @param moves List of all possible moves for all opposing player (in order)
 	 * @return Set of combinations of one move per opposing player (maintains order)
 	 */
-	private Set<List<Move>> combinations(List<List<Move>> moves){
+	public static Set<List<Move>> combinations(List<List<Move>> moves){
 		Set<List<Move>> ret = new HashSet<List<Move>>();
 		if(moves.size() == 0){
 			return ret;

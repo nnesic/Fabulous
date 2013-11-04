@@ -10,6 +10,10 @@ import org.ggp.base.util.statemachine.*;
  */
 public class Heuristics {
 	
+	private static final int MAX_HEURISTIC = 99;
+	
+	private static final int MIN_HEURISTIC = 1;
+	
 	private final StateMachine theMachine;
 	
 	/**
@@ -26,8 +30,26 @@ public class Heuristics {
 	 * @param role Role to evaluate for
 	 * @return Heuristic value
 	 */
-	public int evaluate_dummy(MachineState state, Role role){
-		return Integer.MIN_VALUE;
+	public int evaluate_dummy(){
+		return (MAX_HEURISTIC + MIN_HEURISTIC) / 2;
+	}
+	
+	private int maxMoves = 1;
+	
+	/**
+	 * Evaluation function using the mobility metric.
+	 * 
+	 * @param moves Number of available moves
+	 * @return Heuristic value
+	 */
+	public int evaluate_mobility(int moves){
+		if(moves > maxMoves){
+			maxMoves = moves;
+			return MAX_HEURISTIC;
+		}
+		moves *= (MAX_HEURISTIC - MIN_HEURISTIC);
+		moves /= maxMoves;
+		return MIN_HEURISTIC + moves;
 	}
 	
 }
