@@ -1,11 +1,13 @@
 package org.ggp.base.player.gamer.statemachine.sample;
 
+import org.apache.commons.collections4.map.ReferenceMap;
+import org.ggp.base.player.gamer.statemachine.sample.FabulousMultiPlayer2.Tuple;
 import org.ggp.base.util.statemachine.*;
 
 /**
  * Class containing the evaluation functions used by FabulousPlayer.
  * 
- * @author Nicolai
+ * @author Nicolai, Irme
  *
  */
 public class Heuristics {
@@ -50,6 +52,17 @@ public class Heuristics {
 		moves *= (MAX_HEURISTIC - MIN_HEURISTIC);
 		moves /= maxMoves;
 		return MIN_HEURISTIC + moves;
+	}
+	
+	public int evaluate_novelty(MachineState state,  ReferenceMap<MachineState, Tuple> transposition ){
+		if(transposition.containsKey(state)){
+			return MIN_HEURISTIC;
+		}
+		else{
+			return MAX_HEURISTIC;
+		}
+		
+		
 	}
 	
 }
