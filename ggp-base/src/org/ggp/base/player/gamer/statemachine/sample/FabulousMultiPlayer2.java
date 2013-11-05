@@ -17,7 +17,7 @@ import org.ggp.base.util.statemachine.exceptions.TransitionDefinitionException;
 /**
  * Fabulous Multiplayer
  * 
- * @author Nera, Nicolai
+ * @author Nera, Nicolai, Irme
  *
  */
 final class FabulousMultiPlayer2 extends SampleGamer {
@@ -71,6 +71,8 @@ final class FabulousMultiPlayer2 extends SampleGamer {
 	private final TimeoutException timeoutException = new TimeoutException();
 
 	private ReferenceMap<MachineState, Tuple> transposition;
+	
+	private ReferenceMap<MachineState, Object> seen;
 
 	private ReferenceMap <MachineState, Map <Move, Tuple>> transpositionMin;
 
@@ -135,6 +137,7 @@ final class FabulousMultiPlayer2 extends SampleGamer {
 	 * @return Best move
 	 */
 	private Move minimax(MachineState state){
+		seen = new ReferenceMap<MachineState, Object>(SOFT, SOFT);
 		if(transposition.containsKey(state) && transposition.get(state).complete){
 			Tuple lookup = transposition.get(state);
 			if(!lookup.pruned || (lookup.alpha == MIN_SCORE - 1 && lookup.beta == MAX_SCORE + 1)){
@@ -212,12 +215,12 @@ final class FabulousMultiPlayer2 extends SampleGamer {
 			}
 		if(bestScore != Integer.MIN_VALUE){
 			if(! useHeuristic){
-				heuristic.addValue(heuristic.evaluate_mobility(moves), heuristic.evaluate_novelty(state, transposition), heuristic.evaluate_opponentMobility(minMoves), bestScore);
+				heuristic.addValue(heuristic.evaluate_mobility(moves), heuristic.evaluate_novelty(state, seen), heuristic.evaluate_opponentMobility(minMoves), bestScore);
 			}
 			transposition.put(state, new Tuple(bestScore, ! notDone, pruned, MIN_SCORE - 1, MAX_SCORE + 1, bestMove));
 		}
 		else if(useHeuristic){
-			int value = heuristic.evaluate_combined(moves, minMoves, state, transposition);
+			int value = heuristic.evaluate_combined(moves, minMoves, state, seen);
 			Tuple ret = new Tuple(value, false, false, MIN_SCORE - 1, MAX_SCORE + 1, null);
 			transposition.put(state, ret);
 		}
@@ -287,7 +290,7 @@ final class FabulousMultiPlayer2 extends SampleGamer {
 		
 		if(depth == 0){
 			if(useHeuristic){
-				int value = heuristic.evaluate_combined(moves, minMoves, state, transposition);
+				int value = heuristic.evaluate_combined(moves, minMoves, state, seen);
 				Tuple ret = new Tuple(value, false, false, alpha, beta, null);
 				transposition.put(state, ret);
 				return ret;
@@ -381,15 +384,16 @@ final class FabulousMultiPlayer2 extends SampleGamer {
 		Tuple ret = new Tuple(bestScore, complete, pruned, alpha0, beta, bestMove);
 		if(bestScore != Integer.MIN_VALUE){
 			if(! useHeuristic){
-				heuristic.addValue(heuristic.evaluate_mobility(moves), heuristic.evaluate_novelty(state, transposition), heuristic.evaluate_opponentMobility(minMoves), bestScore);
+				heuristic.addValue(heuristic.evaluate_mobility(moves), heuristic.evaluate_novelty(state, seen), heuristic.evaluate_opponentMobility(minMoves), bestScore);
 			}
 			transposition.put(state, ret);
 		}
 		else if(useHeuristic){
-			int value = heuristic.evaluate_combined(moves, minMoves, state, transposition);
+			int value = heuristic.evaluate_combined(moves, minMoves, state, seen);
 			ret = new Tuple(value, false, pruned, alpha, beta, null);
 			transposition.put(state, ret);
 		}
+		addTable(state);
 		return ret;
 	}
 
@@ -528,6 +532,16 @@ final class FabulousMultiPlayer2 extends SampleGamer {
 			ret.add(combination);
 		}
 		return ret;
+	}
+	/**
+	 * 
+	 * @param state the Machine state
+	 */
+	private void addTable(MachineState state){
+		if(!seen.containsKey(state)){
+			seen.put(state, new Object());
+		}
+		
 	}
 
 }
