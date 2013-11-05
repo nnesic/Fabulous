@@ -65,6 +65,12 @@ public class Heuristics {
 		ret += weights[0] * evaluate_mobility(maxMove);
 		ret += weights[1] * evaluate_novelty(state, transposition);
 		ret += weights[2] * inverse(evaluate_opponentMobility(minMoves));
+		if(ret > MAX_HEURISTIC){
+			ret = MAX_HEURISTIC;
+		}
+		else if(ret < MIN_HEURISTIC){
+			ret = MIN_HEURISTIC;
+		}
 		return (int)ret;
 	}
 	
@@ -82,6 +88,12 @@ public class Heuristics {
 		ret += weights[0] * evaluate_mobility(move);
 		ret += weights[1] * evaluate_novelty(state, transposition);
 		ret += weights[2] * inverse(evaluate_mobility(move));
+		if(ret > MAX_HEURISTIC){
+			ret = MAX_HEURISTIC;
+		}
+		else if(ret < MIN_HEURISTIC){
+			ret = MIN_HEURISTIC;
+		}
 		return (int)ret;
 	}
 	
