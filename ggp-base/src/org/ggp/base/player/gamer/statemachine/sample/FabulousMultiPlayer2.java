@@ -141,13 +141,30 @@ final class FabulousMultiPlayer2 extends SampleGamer {
 				return lookup.move;
 			}
 		}
-		List<Move> moves;
-		try {
-			moves = theMachine.getLegalMoves(state, role);
-		} catch (MoveDefinitionException e) {
-			System.err.println("No legal moves!");
-			return null;
+		
+		List<Move> moves = new ArrayList<Move>();
+		List<List<Move>> minMoves = new ArrayList<List<Move>>();
+		int fabulous = 0;
+		for(int i = 0; i < theMachine.getRoles().size(); i++){
+			Role r = theMachine.getRoles().get(i);
+			if(r.equals(role)){
+				fabulous = i;
+				try {
+					moves = theMachine.getLegalMoves(state, role);
+				} catch (MoveDefinitionException e) {
+					System.err.println("No legal moves for player!");
+					return null;
+				}
+				continue;
+			}
+			try {
+				minMoves.add(theMachine.getLegalMoves(state, r));
+			} catch (MoveDefinitionException e) {
+				System.err.println("No legal moves for opponent!");
+				minMoves.add(new ArrayList<Move>());
+			}
 		}
+		
 		boolean notDone = true;
 		boolean pruned = false;
 		int depth = 1;	//Change to something high for testing with output!
@@ -170,7 +187,7 @@ final class FabulousMultiPlayer2 extends SampleGamer {
 				for(Move move: moves){
 					Tuple tempScore = new Tuple(bestScore, false, false, alpha, beta, move);
 					try {
-						tempScore = minPlayer (state, move, depth, alpha, beta);
+						tempScore = minPlayer (state, move, minMoves, fabulous, depth, alpha, beta);
 					} catch (TimeoutException e){
 						System.out.println("Ran out of time!");
 						notDone = true;
@@ -194,7 +211,15 @@ final class FabulousMultiPlayer2 extends SampleGamer {
 				}
 			}
 		if(bestScore != Integer.MIN_VALUE){
+			if(! useHeuristic){
+				heuristic.addValue(heuristic.evaluate_mobility(moves), heuristic.evaluate_novelty(state, transposition), heuristic.evaluate_opponentMobility(minMoves), bestScore);
+			}
 			transposition.put(state, new Tuple(bestScore, ! notDone, pruned, MIN_SCORE - 1, MAX_SCORE + 1, bestMove));
+		}
+		else if(useHeuristic){
+			int value = heuristic.evaluate_combined(moves, minMoves, state, transposition);
+			Tuple ret = new Tuple(value, false, false, MIN_SCORE - 1, MAX_SCORE + 1, null);
+			transposition.put(state, ret);
 		}
 		//System.out.println("Done. Depth: " + depth);
 		return bestMove;
@@ -237,23 +262,25 @@ final class FabulousMultiPlayer2 extends SampleGamer {
 			}
 		}
 		
-		List<Move> moves;
-		try {
-			moves = theMachine.getLegalMoves(state, role);
-		} catch (MoveDefinitionException e) {
-			System.err.println("No legal moves!");
-			return new Tuple(Integer.MIN_VALUE, false, false, alpha, beta, null);
-		}
-		
+		List<Move> moves = new ArrayList<Move>();
 		List<List<Move>> minMoves = new ArrayList<List<Move>>();
-		for(Role r : theMachine.getRoles()){
+		int fabulous = 0;
+		for(int i = 0; i < theMachine.getRoles().size(); i++){
+			Role r = theMachine.getRoles().get(i);
 			if(r.equals(role)){
+				fabulous = i;
+				try {
+					moves = theMachine.getLegalMoves(state, role);
+				} catch (MoveDefinitionException e) {
+					System.err.println("No legal moves for player!");
+					return new Tuple(Integer.MIN_VALUE, false, false, alpha, beta, null);
+				}
 				continue;
 			}
 			try {
 				minMoves.add(theMachine.getLegalMoves(state, r));
 			} catch (MoveDefinitionException e) {
-				System.err.println("Problem finding opponents moves.");
+				System.err.println("No legal moves for opponent!");
 				minMoves.add(new ArrayList<Move>());
 			}
 		}
@@ -280,7 +307,7 @@ final class FabulousMultiPlayer2 extends SampleGamer {
 		Move firstTry = null;
 		if(transposition.containsKey(state) && transposition.get(state).move != null){
 			firstTry = transposition.get(state).move;
-			Tuple s = minPlayer(state, firstTry, depth, alpha, beta);
+			Tuple s = minPlayer(state, firstTry, minMoves, fabulous, depth, alpha, beta);
 			if(!s.complete){
 				complete = false;
 				//return new Tuple (Integer.MIN_VALUE, false);
@@ -316,7 +343,7 @@ final class FabulousMultiPlayer2 extends SampleGamer {
 			if(move.equals(firstTry)){
 				continue;
 			}
-			Tuple s = minPlayer(state, move, depth, alpha, beta);
+			Tuple s = minPlayer(state, move, minMoves, fabulous, depth, alpha, beta);
 			if(!s.complete){
 				complete = false;
 				//return new Tuple (Integer.MIN_VALUE, false);
@@ -358,6 +385,11 @@ final class FabulousMultiPlayer2 extends SampleGamer {
 			}
 			transposition.put(state, ret);
 		}
+		else if(useHeuristic){
+			int value = heuristic.evaluate_combined(moves, minMoves, state, transposition);
+			ret = new Tuple(value, false, pruned, alpha, beta, null);
+			transposition.put(state, ret);
+		}
 		return ret;
 	}
 
@@ -366,13 +398,15 @@ final class FabulousMultiPlayer2 extends SampleGamer {
 	 * 
 	 * @param state Game state
 	 * @param move Max-player's move
+	 * @param options Min-players' possible moves
+	 * @param fabulous Player's index in the role list
 	 * @param depth Depth limit
 	 * @param alpha Alpha value
 	 * @param beta Beta value
 	 * @return Worst score
 	 * @throws TimeoutException Time limit exceeded
 	 */
-	private Tuple minPlayer(MachineState state, Move move, int depth, int alpha, int beta) throws TimeoutException{
+	private Tuple minPlayer(MachineState state, Move move, List<List<Move>> options, int fabulous, int depth, int alpha, int beta) throws TimeoutException{
 		if(System.currentTimeMillis() > timeout){
 			throw timeoutException;
 		}
@@ -386,25 +420,7 @@ final class FabulousMultiPlayer2 extends SampleGamer {
 				return lookup;				
 			}
 		}
-
-		List<List<Move>> options = new ArrayList<List<Move>>();
-		List<Role> roles = theMachine.getRoles();
-		int fabulous = 0;
-		for(int i = 0; i < roles.size(); i++){
-			Role player = roles.get(i);
-			if(player.equals(role)){
-				fabulous = i;
-				continue;
-			}
-			List<Move> moves;
-			try {
-				moves = theMachine.getLegalMoves(state, player);
-			} catch (MoveDefinitionException e) {
-				System.err.println("No legal moves!");
-				moves = new ArrayList<Move>();
-			}
-			options.add(moves);
-		}
+		
 		List<List<Move>> next = combinations(options);
 
 		MachineState nextState;
