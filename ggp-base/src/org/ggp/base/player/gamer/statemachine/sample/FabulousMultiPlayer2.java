@@ -238,7 +238,7 @@ final class FabulousMultiPlayer2 extends SampleGamer {
 		}
 		
 		if(depth == 0){
-			return new Tuple(heuristic.evaluate_mobility(moves.size()), false, false, alpha, beta, null);
+			return new Tuple(heuristic.evaluate_mobility(moves), false, false, alpha, beta, null);
 		}
 
 		int bestScore = MIN_SCORE - 1;

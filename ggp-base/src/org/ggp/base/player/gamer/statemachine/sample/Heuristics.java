@@ -58,14 +58,15 @@ public class Heuristics {
 	 * @param moves Number of available moves
 	 * @return Heuristic value
 	 */
-	public int evaluate_mobility(int moves){
-		if(moves > maxMoves){
-			maxMoves = moves;
+	public int evaluate_mobility(List<Move> moves){
+		int c = moves.size();
+		if(c > maxMoves){
+			maxMoves = c;
 			return MAX_HEURISTIC;
 		}
-		moves *= (MAX_HEURISTIC - MIN_HEURISTIC);
-		moves /= maxMoves;
-		return MIN_HEURISTIC + moves;
+		c *= (MAX_HEURISTIC - MIN_HEURISTIC);
+		c /= maxMoves;
+		return MIN_HEURISTIC + c;
 	}
 	
 	/**
