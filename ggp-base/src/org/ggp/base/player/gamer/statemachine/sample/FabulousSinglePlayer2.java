@@ -23,7 +23,7 @@ import org.ggp.base.util.statemachine.exceptions.TransitionDefinitionException;
  * @author Nicolai
  *
  */
-final class FabulousSinglePlayer extends SampleGamer {
+final class FabulousSinglePlayer2 extends SampleGamer {
 	
 	private enum SearchResult{
 		LIMIT, TERMINAL, DONE, ERROR, TIMEOUT
@@ -49,11 +49,30 @@ final class FabulousSinglePlayer extends SampleGamer {
 	
 	private boolean useHeuristic = false;
 	
+	private MachineState currentState;
+	
+	private StateMachine theMachine;
+	
+	private boolean foundSolution = false;
+	
+	@Override
+	public void setState(MachineState state){
+		currentState = state;
+	}
+	
+	
 	@Override
 	public Move stateMachineSelectMove(long timeout) throws TransitionDefinitionException, MoveDefinitionException, GoalDefinitionException{
-		if(best == null || best.isEmpty()){
+		if (!foundSolution){
+		//if(best == null || best.isEmpty()){
 			//System.out.println("No best solution, performing random move.");
-			return getStateMachine().getRandomMove(getCurrentState(), getRole());
+			upperSearch(theMachine, currentState, timeout);
+			//System.out.println("searching again");
+			//return getStateMachine().getRandomMove(getCurrentState(), getRole());
+		}
+		if(best == null || best.isEmpty()){
+			System.out.println("playing random");
+			return getStateMachine().getRandomMove(currentState, getRole());
 		}
 		return best.removeFirst();
 	}
@@ -62,15 +81,21 @@ final class FabulousSinglePlayer extends SampleGamer {
 	public void stateMachineMetaGame(long timeout){
 		best = null;
 		bestScore = MIN_SCORE - 1;
-		current = new ArrayDeque<Move>();
+		foundSolution = false;
 		completed = new ReferenceMap<MachineState, Object>(soft, soft);
+		seen = new ReferenceMap<MachineState, Integer>(soft, soft);
+		theMachine = getStateMachine();
+		heuristic = new Heuristics( theMachine);
+		upperSearch(theMachine, theMachine.getInitialState(), timeout);
+	}
+	
+	private void upperSearch (StateMachine theMachine, MachineState state, long timeout){
+		best=null;
+		current = new ArrayDeque<Move>();
+		bestScore = MIN_SCORE - 1;
 		timeout -= 1000;
 		int depth = 1;
-		//long now = System.currentTimeMillis();
-		//long estimate;
-		StateMachine theMachine = getStateMachine();
-		seen = new ReferenceMap<MachineState, Integer>(soft, soft);
-		SearchResult result = search(theMachine, theMachine.getInitialState(), depth, timeout);
+		SearchResult result = search(theMachine, state, depth, timeout);
 		while(result == SearchResult.LIMIT || result == SearchResult.TERMINAL){
 			//estimate = 2 * (System.currentTimeMillis() - now);
 			//now = System.currentTimeMillis();
@@ -79,7 +104,7 @@ final class FabulousSinglePlayer extends SampleGamer {
 			}
 			depth++;
 			seen = new ReferenceMap<MachineState, Integer>(soft, soft);
-			result = search(theMachine, theMachine.getInitialState(), depth, timeout);
+			result = search(theMachine, state, depth, timeout);
 		}
 		if(result == SearchResult.ERROR){
 			System.err.println("An error occured during search.");
@@ -90,6 +115,7 @@ final class FabulousSinglePlayer extends SampleGamer {
 		if(best == null || best.isEmpty()){
 			System.out.println("Playing random moves.");
 		}
+		
 	}
 	
 	/**
@@ -116,13 +142,21 @@ final class FabulousSinglePlayer extends SampleGamer {
 			if(score > bestScore){
 				best = new ArrayDeque<Move>();
 				best.addAll(current);
+				bestScore = score;
 			}
 			if(score == MAX_SCORE){
+				foundSolution = true;
 				return SearchResult.DONE;
 			}
 			return SearchResult.TERMINAL;
 		}
 		if(depth == 0){
+			int score = heuristic.evaluate_dummy();
+			if(score > bestScore){
+				best = new ArrayDeque<Move>();
+				best.addAll(current);
+				bestScore = score;
+			}
 			return SearchResult.LIMIT;
 		}
 		List<Move> moves;
