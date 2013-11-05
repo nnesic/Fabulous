@@ -3,6 +3,11 @@ package org.ggp.base.player.gamer.statemachine.sample;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.collections4.map.AbstractReferenceMap;
+import org.apache.commons.collections4.map.AbstractReferenceMap.ReferenceStrength;
+import org.apache.commons.collections4.map.ReferenceMap;
+import org.ggp.base.util.statemachine.*;
+
 /**
  * Class containing the evaluation functions used by FabulousPlayer.
  * 
@@ -158,91 +163,7 @@ public class Heuristics {
 		int[] val = new int[3];
 		val[0] = mobility;
 		val[1] = novelty;
-		val[2]
-	}
-	
-	/**
-	 * Computes the weights for the combined heuristic function.
-	 */
-	public void computeWeights(){
-		double mult = 0.0;
-		double[] add = {0.0, 0.0, 0.0};
-		for(Record r : values.values()){
-			for(int i = 0; i < 3; i++){
-				mult += r.heuristics[i] * r.heuristics[i];
-				add[i] += r.heuristics[i] * r.value;
-			}
-		}
-		for(int i = 0; i < 3; i++){
-			weights[i] = (int)(add[i] / mult);
-		}
-	}
-	
-}	 * @param moves Number of available moves
-	 * @return Heuristic value
-	 */
-	public int evaluate_mobility(List<Move> moves){
-		int c = moves.size();
-		if(c > maxMoves){
-			maxMoves = c;
-			return MAX_HEURISTIC;
-		}
-		c *= (MAX_HEURISTIC - MIN_HEURISTIC);
-		c /= maxMoves;
-		return MIN_HEURISTIC + c;
-	}
-	
-	/**
-	 * Evaluation function using the novelty metric.
-	 * Basic implementation, only checks for exact matches.
-	 * 
-	 * @param state Current state
-	 * @param transposition Transposition table
-	 * @return Heuristic value
-	 */
-	public int evaluate_novelty(MachineState state, Map<MachineState, ?> transposition){
-		if(transposition.containsKey(state)){
-			return MIN_HEURISTIC;
-		}
-		else{
-			return MAX_HEURISTIC;
-		}
-	}
-	
-	/**
-	 * Evaluation function using opponents' mobility.
-	 * 
-	 * @param moves List of opponents' possible moves
-	 * @return Heuristic value
-	 */
-	public int evaluate_opponentMobility(List<List<Move>> moves){
-		int c = 0;
-		for(List<Move> l : moves){
-			c += l.size();
-		}
-		if(c > maxOppMoves){
-			maxOppMoves = c;
-			return MAX_HEURISTIC;
-		}
-		c *= (MAX_HEURISTIC - MIN_HEURISTIC);
-		c /= maxOppMoves;
-		return MIN_HEURISTIC + c;
-	}
-	
-	/**
-	 * Adds a state's heuristic values to the table.
-	 * 
-	 * @param mobility Mobility heuristic value
-	 * @param novelty Novelty heuristic value
-	 * @param invOppMobility Inverted opponents' mobility heuristic value
-	 * @param value State's actual value
-	 */
-	public void addValue(int mobility, int novelty, int invOppMobility, int value){
-		int[] val = new int[3];
-		val[0] = mobility;
-		val[1] = novelty;
-		val[2] = invOppMobility;
-		values.put(new Object(), new Record(val, value));
+		val[2] = 0;
 	}
 	
 	/**

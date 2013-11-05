@@ -45,10 +45,6 @@ final class FabulousSinglePlayer extends SampleGamer {
 	
 	private ReferenceMap<MachineState, Object> completed;
 	
-	private Heuristics heuristic;
-	
-	private boolean useHeuristic = false;
-	
 	@Override
 	public Move stateMachineSelectMove(long timeout) throws TransitionDefinitionException, MoveDefinitionException, GoalDefinitionException{
 		if(best == null || best.isEmpty()){
