@@ -47,7 +47,7 @@ final class FabulousSinglePlayer2 extends SampleGamer {
 	
 	private Heuristics heuristic;
 	
-	private boolean useHeuristic = false;
+	private boolean useHeuristic = true;
 	
 	private MachineState currentState;
 	
@@ -59,7 +59,6 @@ final class FabulousSinglePlayer2 extends SampleGamer {
 	public void setState(MachineState state){
 		currentState = state;
 	}
-	
 	
 	@Override
 	public Move stateMachineSelectMove(long timeout) throws TransitionDefinitionException, MoveDefinitionException, GoalDefinitionException{
@@ -89,7 +88,14 @@ final class FabulousSinglePlayer2 extends SampleGamer {
 		upperSearch(theMachine, theMachine.getInitialState(), timeout);
 	}
 	
-	private void upperSearch (StateMachine theMachine, MachineState state, long timeout){
+	/**
+	 * Performs iterative deepening search.
+	 * 
+	 * @param theMachine State machine of the game
+	 * @param state Initial state
+	 * @param timeout Time limit
+	 */
+	private void upperSearch(StateMachine theMachine, MachineState state, long timeout){
 		best=null;
 		current = new ArrayDeque<Move>();
 		bestScore = MIN_SCORE - 1;
@@ -150,15 +156,6 @@ final class FabulousSinglePlayer2 extends SampleGamer {
 			}
 			return SearchResult.TERMINAL;
 		}
-		if(depth == 0){
-			int score = heuristic.evaluate_dummy();
-			if(score > bestScore){
-				best = new ArrayDeque<Move>();
-				best.addAll(current);
-				bestScore = score;
-			}
-			return SearchResult.LIMIT;
-		}
 		List<Move> moves;
 		try{
 			moves = theMachine.getLegalMoves(state, getRole());
@@ -180,6 +177,17 @@ final class FabulousSinglePlayer2 extends SampleGamer {
 			if(!(hashCheck(s, depth - 1) || (completed.keySet().contains(s) && completed.get(s)))){
 				next.put(s, m);
 			}
+		}
+		if(depth == 0){
+			if(useHeuristic){
+				int score = heuristic.evaluate_combinedSingle(moves, state, seen);
+				if(score > bestScore){
+					best = new ArrayDeque<Move>();
+					best.addAll(current);
+					bestScore = score;
+				}
+			}
+			return SearchResult.LIMIT;
 		}
 		boolean done = true;
 		for(MachineState s : next.keySet()){
@@ -214,6 +222,7 @@ final class FabulousSinglePlayer2 extends SampleGamer {
 		seen.put(state, depth);
 		return false;
 	}
+	
 	/**
 	 * 
 	 * @param state MachineState
