@@ -20,7 +20,7 @@ import org.ggp.base.util.statemachine.exceptions.TransitionDefinitionException;
 /**
  * Fabulous Singleplayer.
  * 
- * @author Nicolai
+ * @author Nicolai, Nera, Irme
  *
  */
 final class FabulousSinglePlayer2 extends SampleGamer {
@@ -43,7 +43,7 @@ final class FabulousSinglePlayer2 extends SampleGamer {
 	
 	private ReferenceMap<MachineState, Integer> seen;
 	
-	private ReferenceMap<MachineState, Object> completed;
+	private ReferenceMap<MachineState, Boolean> completed;
 	
 	private Heuristics heuristic;
 	
@@ -82,7 +82,7 @@ final class FabulousSinglePlayer2 extends SampleGamer {
 		best = null;
 		bestScore = MIN_SCORE - 1;
 		foundSolution = false;
-		completed = new ReferenceMap<MachineState, Object>(soft, soft);
+		completed = new ReferenceMap<MachineState, Boolean>(soft, soft);
 		seen = new ReferenceMap<MachineState, Integer>(soft, soft);
 		theMachine = getStateMachine();
 		heuristic = new Heuristics( theMachine);
@@ -177,7 +177,7 @@ final class FabulousSinglePlayer2 extends SampleGamer {
 				System.err.println("Something went horribly wrong!");
 				return SearchResult.ERROR;
 			}
-			if(!(hashCheck(s, depth - 1) || completed.keySet().contains(s))){
+			if(!(hashCheck(s, depth - 1) || (completed.keySet().contains(s) && completed.get(s)))){
 				next.put(s, m);
 			}
 		}
@@ -193,10 +193,10 @@ final class FabulousSinglePlayer2 extends SampleGamer {
 			}
 			current.removeLast();
 		}
+		addTable(state, done);
 		if(done){
-			completed.put(state, new Object());
 			return SearchResult.TERMINAL;
-		}
+		} 
 		return SearchResult.LIMIT;
 	}
 	
@@ -213,6 +213,20 @@ final class FabulousSinglePlayer2 extends SampleGamer {
 		}
 		seen.put(state, depth);
 		return false;
+	}
+	/**
+	 * 
+	 * @param state MachineState
+	 * @param done whether the search is done or not.
+	 */
+	private void addTable(MachineState state, boolean done){
+		if(!completed.containsKey(state)){
+			completed.put(state, done);
+			
+		}else if (done){
+			completed.put(state, done);
+		}
+		
 	}
 	
 }
