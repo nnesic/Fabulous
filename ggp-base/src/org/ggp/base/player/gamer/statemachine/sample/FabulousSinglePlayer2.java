@@ -205,7 +205,7 @@ final class FabulousSinglePlayer2 extends SampleGamer {
 	 * 
 	 * @param state MachineState
 	 * @param depth Depth value in the game tree (counting backwards)
-	 * @return True if the state was already added in a more favorable position
+	 * @return True if the state was already added in a more favourable position
 	 */
 	private boolean hashCheck(MachineState state, int depth){
 		if(seen.containsKey(state) && seen.get(state) >= depth){
