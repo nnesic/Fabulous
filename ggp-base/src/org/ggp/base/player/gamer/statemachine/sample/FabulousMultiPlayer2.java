@@ -98,7 +98,7 @@ final class FabulousMultiPlayer2 extends SampleGamer {
 
 	@Override
 	public void stateMachineMetaGame(long timeout){
-		timeout -= 500;
+		timeout -= 1000;
 		this.timeout = timeout;
 		this.turnpoint = ((TIME_DIV - TIME_MULT) * System.currentTimeMillis() + TIME_MULT * timeout) / TIME_DIV;
 		theMachine = getStateMachine();
@@ -109,6 +109,7 @@ final class FabulousMultiPlayer2 extends SampleGamer {
 		prune = false;
 		useHeuristic = false;
 		minimax(currentState);
+		heuristic.computeWeights();
 	}
 
 	@Override
@@ -130,7 +131,7 @@ final class FabulousMultiPlayer2 extends SampleGamer {
 	 * Performs minimax search in a state.
 	 * 
 	 * @param state Game state
-	 * @param heuristic Whether to use heuristics for incomplete states
+	 * @param heuristic If true, the combined heuristics function is used, if false, values are used to train the heuristic function
 	 * @return Best move
 	 */
 	private Move minimax(MachineState state){
@@ -244,8 +245,27 @@ final class FabulousMultiPlayer2 extends SampleGamer {
 			return new Tuple(Integer.MIN_VALUE, false, false, alpha, beta, null);
 		}
 		
+		List<List<Move>> minMoves = new ArrayList<List<Move>>();
+		for(Role r : theMachine.getRoles()){
+			if(r.equals(role)){
+				continue;
+			}
+			try {
+				minMoves.add(theMachine.getLegalMoves(state, r));
+			} catch (MoveDefinitionException e) {
+				System.err.println("Problem finding opponents moves.");
+				minMoves.add(new ArrayList<Move>());
+			}
+		}
+		
 		if(depth == 0){
-			return new Tuple(useHeuristic ? heuristic.evaluate_mobility(moves) : Integer.MIN_VALUE, false, false, alpha, beta, null);
+			if(useHeuristic){
+				int value = heuristic.evaluate_combined(moves, minMoves, state, transposition);
+				Tuple ret = new Tuple(value, false, false, alpha, beta, null);
+				transposition.put(state, ret);
+				return ret;
+			}
+			return new Tuple(Integer.MIN_VALUE, false, false, alpha, beta, null);
 		}
 
 		int bestScore = MIN_SCORE - 1;
@@ -333,6 +353,9 @@ final class FabulousMultiPlayer2 extends SampleGamer {
 		}
 		Tuple ret = new Tuple(bestScore, complete, pruned, alpha0, beta, bestMove);
 		if(bestScore != Integer.MIN_VALUE){
+			if(! useHeuristic){
+				heuristic.addValue(heuristic.evaluate_mobility(moves), heuristic.evaluate_novelty(state, transposition), heuristic.evaluate_opponentMobility(minMoves), bestScore);
+			}
 			transposition.put(state, ret);
 		}
 		return ret;
