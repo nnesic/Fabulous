@@ -60,7 +60,6 @@ final class FabulousSinglePlayer2 extends SampleGamer {
 		currentState = state;
 	}
 	
-	
 	@Override
 	public Move stateMachineSelectMove(long timeout) throws TransitionDefinitionException, MoveDefinitionException, GoalDefinitionException{
 		if (!foundSolution){
@@ -89,7 +88,14 @@ final class FabulousSinglePlayer2 extends SampleGamer {
 		upperSearch(theMachine, theMachine.getInitialState(), timeout);
 	}
 	
-	private void upperSearch (StateMachine theMachine, MachineState state, long timeout){
+	/**
+	 * Performs iterative deepening search.
+	 * 
+	 * @param theMachine State machine of the game
+	 * @param state Initial state
+	 * @param timeout Time limit
+	 */
+	private void upperSearch(StateMachine theMachine, MachineState state, long timeout){
 		best=null;
 		current = new ArrayDeque<Move>();
 		bestScore = MIN_SCORE - 1;
@@ -216,6 +222,7 @@ final class FabulousSinglePlayer2 extends SampleGamer {
 		seen.put(state, depth);
 		return false;
 	}
+	
 	/**
 	 * 
 	 * @param state MachineState
