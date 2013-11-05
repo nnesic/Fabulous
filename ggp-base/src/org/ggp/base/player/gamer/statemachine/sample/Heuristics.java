@@ -69,6 +69,23 @@ public class Heuristics {
 	}
 	
 	/**
+	 * Combined heuristic function.
+	 * Singleplayer version.
+	 * 
+	 * @param maxMove Max-player's possible moves
+	 * @param state Game state
+	 * @param transposition Transposition table
+	 * @return Heuristic value
+	 */
+	public int evaluate_combinedSingle(List<Move> move, MachineState state, Map<MachineState, ?> transposition){
+		double ret = 0;
+		ret += weights[0] * evaluate_mobility(move);
+		ret += weights[1] * evaluate_novelty(state, transposition);
+		ret += weights[2] * inverse(evaluate_mobility(move));
+		return (int)ret;
+	}
+	
+	/**
 	 * Inverts the result of an evaluation function.
 	 * 
 	 * @param value Evaluation function output
@@ -159,11 +176,20 @@ public class Heuristics {
 		values.put(new Object(), new Record(val, value));
 	}
 	
+	/**
+	 * Add a stat's heuristic values to the table.
+	 * Singleplayer version.
+	 * 
+	 * @param mobility Mobility heuristic value
+	 * @param novelty Novelty heuristic value
+	 * @param value State's actual value
+	 */
 	public void addValueSingle(int mobility, int novelty, int value){
 		int[] val = new int[3];
 		val[0] = mobility;
 		val[1] = novelty;
-		val[2] = 0;
+		val[2] = inverse(mobility);
+		values.put(new Object(), new Record(val, value));
 	}
 	
 	/**
