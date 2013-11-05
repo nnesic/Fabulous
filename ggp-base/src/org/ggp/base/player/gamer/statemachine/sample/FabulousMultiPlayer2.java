@@ -86,6 +86,8 @@ final class FabulousMultiPlayer2 extends SampleGamer {
 
 	private boolean prune;
 	
+	private boolean useHeuristic = false;
+	
 	private Heuristics heuristic;
 	
 
@@ -105,6 +107,7 @@ final class FabulousMultiPlayer2 extends SampleGamer {
 		transpositionMin = new ReferenceMap <MachineState, Map <Move, Tuple>> (SOFT, SOFT);
 		heuristic = new Heuristics(theMachine);
 		prune = false;
+		useHeuristic = false;
 		minimax(currentState);
 	}
 
@@ -114,6 +117,7 @@ final class FabulousMultiPlayer2 extends SampleGamer {
 		this.timeout = timeout;
 		this.turnpoint = 0;
 		prune = false;
+		useHeuristic = true;
 		Move move = minimax(currentState);
 		if(move != null){
 			return move;
@@ -126,6 +130,7 @@ final class FabulousMultiPlayer2 extends SampleGamer {
 	 * Performs minimax search in a state.
 	 * 
 	 * @param state Game state
+	 * @param heuristic Whether to use heuristics for incomplete states
 	 * @return Best move
 	 */
 	private Move minimax(MachineState state){
@@ -187,7 +192,9 @@ final class FabulousMultiPlayer2 extends SampleGamer {
 					}
 				}
 			}
-		transposition.put(state, new Tuple(bestScore, ! notDone, pruned, MIN_SCORE - 1, MAX_SCORE + 1, bestMove));
+		if(bestScore != Integer.MIN_VALUE){
+			transposition.put(state, new Tuple(bestScore, ! notDone, pruned, MIN_SCORE - 1, MAX_SCORE + 1, bestMove));
+		}
 		//System.out.println("Done. Depth: " + depth);
 		return bestMove;
 	}
@@ -210,12 +217,12 @@ final class FabulousMultiPlayer2 extends SampleGamer {
 			Tuple ret;
 			try {
 				ret = new Tuple(theMachine.getGoal(state, role), true, false, alpha, beta, null);
+				transposition.put(state, ret);
 			} catch (GoalDefinitionException e) {
 				System.err.println("Bad goal description!");
 				ret = new Tuple(Integer.MIN_VALUE, false, false, alpha, beta, null);
 			}
 			//System.out.println("Found a goal of value " + ret.score);
-			transposition.put(state, ret);
 			return ret;
 		}
 		if(transposition.containsKey(state) && transposition.get(state).complete){
@@ -238,7 +245,7 @@ final class FabulousMultiPlayer2 extends SampleGamer {
 		}
 		
 		if(depth == 0){
-			return new Tuple(heuristic.evaluate_mobility(moves), false, false, alpha, beta, null);
+			return new Tuple(useHeuristic ? heuristic.evaluate_mobility(moves) : Integer.MIN_VALUE, false, false, alpha, beta, null);
 		}
 
 		int bestScore = MIN_SCORE - 1;
@@ -325,7 +332,9 @@ final class FabulousMultiPlayer2 extends SampleGamer {
 			bestScore = Integer.MIN_VALUE;
 		}
 		Tuple ret = new Tuple(bestScore, complete, pruned, alpha0, beta, bestMove);
-		transposition.put(state, ret);
+		if(bestScore != Integer.MIN_VALUE){
+			transposition.put(state, ret);
+		}
 		return ret;
 	}
 

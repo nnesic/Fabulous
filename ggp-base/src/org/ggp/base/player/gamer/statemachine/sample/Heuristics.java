@@ -3,6 +3,9 @@ package org.ggp.base.player.gamer.statemachine.sample;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.collections4.map.AbstractReferenceMap;
+import org.apache.commons.collections4.map.ReferenceMap;
+import org.apache.commons.collections4.map.AbstractReferenceMap.ReferenceStrength;
 import org.ggp.base.util.statemachine.*;
 
 /**
@@ -13,22 +16,56 @@ import org.ggp.base.util.statemachine.*;
  */
 public class Heuristics {
 	
+	/**
+	 * Class holding a state's heuristic values and actual value.
+	 */
+	private class Record {
+		int[] heuristics;
+		int value;
+		
+		protected Record(int[] heuristics, int value){
+			this.heuristics = heuristics;
+			this.value = value;
+		}
+	}
+	
 	private static final int MAX_HEURISTIC = 99;
 	
 	private static final int MIN_HEURISTIC = 1;
 	
-	private final StateMachine theMachine;
+	private static final ReferenceStrength SOFT = AbstractReferenceMap.ReferenceStrength.SOFT;
 	
 	private int maxMoves = 1;
 	
 	private int maxOppMoves;
 	
+	private ReferenceMap<Object, Record> values;
+	
+	private double[] weights = {0.34, 0.33, 0.33};
+	
 	/**
 	 * @param machine State machine of the game
 	 */
 	public Heuristics(StateMachine machine){
-		theMachine = machine;
-		maxOppMoves = 1;
+		maxOppMoves = machine.getRoles().size();
+		values = new ReferenceMap<Object, Record>(SOFT, SOFT);
+	}
+	
+	/**
+	 * Combined heuristic function.
+	 * 
+	 * @param maxMove Max-player's possible moves
+	 * @param minMoves Min-players' possible moves
+	 * @param state Game state
+	 * @param transposition Transposition table
+	 * @return Heuristic value
+	 */
+	public int evaluate_combined(List<Move> maxMove, List<List<Move>> minMoves, MachineState state, Map<MachineState, ?> transposition){
+		double ret = 0;
+		ret += weights[0] * evaluate_mobility(maxMove);
+		ret += weights[1] * evaluate_novelty(state, transposition);
+		ret += weights[2] * inverse(evaluate_opponentMobility(minMoves));
+		return (int)ret;
 	}
 	
 	/**
@@ -104,6 +141,39 @@ public class Heuristics {
 		c *= (MAX_HEURISTIC - MIN_HEURISTIC);
 		c /= maxOppMoves;
 		return MIN_HEURISTIC + c;
+	}
+	
+	/**
+	 * Adds a state's heuristic values to the table.
+	 * 
+	 * @param mobility Mobility heuristic value
+	 * @param novelty Novelty heuristic value
+	 * @param invOppMobility Inverted opponents' mobility heuristic value
+	 * @param value State's actual value
+	 */
+	public void addValue(int mobility, int novelty, int invOppMobility, int value){
+		int[] val = new int[3];
+		val[0] = mobility;
+		val[1] = novelty;
+		val[2] = invOppMobility;
+		values.put(new Object(), new Record(val, value));
+	}
+	
+	/**
+	 * Computes the weights for the combined heuristic function.
+	 */
+	public void computeWeights(){
+		double mult = 0.0;
+		double[] add = {0.0, 0.0, 0.0};
+		for(Record r : values.values()){
+			for(int i = 0; i < 3; i++){
+				mult += r.heuristics[i] * r.heuristics[i];
+				add[i] += r.heuristics[i] * r.value;
+			}
+		}
+		for(int i = 0; i < 3; i++){
+			weights[i] = (int)(add[i] / mult);
+		}
 	}
 	
 }
