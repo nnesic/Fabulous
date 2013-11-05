@@ -15,7 +15,7 @@ import org.ggp.base.util.statemachine.exceptions.TransitionDefinitionException;
  */
 public final class FabulousPlayer extends SampleGamer {
 	
-	private final SampleGamer singlePlayer = new FabulousSinglePlayer();
+	private final SampleGamer singlePlayer = new FabulousSinglePlayer2();
 	
 	private final SampleGamer multiPlayer = new FabulousMultiPlayer2();
 	
