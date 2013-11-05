@@ -20,8 +20,8 @@ public class Heuristics {
 	 * Class holding a state's heuristic values and actual value.
 	 */
 	private class Record {
-		int[] heuristics;
-		int value;
+		final int[] heuristics;
+		final int value;
 		
 		protected Record(int[] heuristics, int value){
 			this.heuristics = heuristics;
@@ -157,6 +157,13 @@ public class Heuristics {
 		val[1] = novelty;
 		val[2] = invOppMobility;
 		values.put(new Object(), new Record(val, value));
+	}
+	
+	public void addValueSingle(int mobility, int novelty, int value){
+		int[] val = new int[3];
+		val[0] = mobility;
+		val[1] = novelty;
+		val[2]
 	}
 	
 	/**

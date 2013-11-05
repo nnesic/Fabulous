@@ -38,12 +38,12 @@ final class FabulousMultiPlayer2 extends SampleGamer {
 	 * Holds a score and information about completeness of exploration.
 	 */
 	private class Tuple {
-		protected final int score;
-		protected final boolean complete;
-		protected final boolean pruned;
-		protected final int alpha;
-		protected final int beta;
-		protected final Move move;
+		final int score;
+		final boolean complete;
+		final boolean pruned;
+		final int alpha;
+		final int beta;
+		final Move move;
 		//protected final List <Move> moves;
 
 		protected Tuple(int score, boolean complete, boolean pruned, int alpha, int beta, Move move){
