@@ -19,6 +19,12 @@ import org.ggp.base.util.statemachine.exceptions.TransitionDefinitionException;
 
 final class FabulousMonteCarlo extends SampleGamer {
 	
+	private static final int MAX_SCORE = 100;
+	
+	private static final int MIN_SCORE = 0;
+	
+	private static final double C = 1.0;
+	
 	private abstract class Node{
 		
 	}
@@ -74,24 +80,79 @@ final class FabulousMonteCarlo extends SampleGamer {
 		
 	}
 	
+	/**
+	 * Thrown if a timeout occurs during search.
+	 */
+	private class TimeoutException extends Throwable {;
+	
+		private static final long serialVersionUID = -5034297695141082527L;
+
+		public TimeoutException(){
+			super();
+		}
+	}
+
+	private final TimeoutException timeoutException = new TimeoutException();
+	
 	private StateMachine theMachine;
 	
+	private Node root;
+	
+	private MachineState currentState;
+	
+	private int role;
+	
+	@Override
+	public void setState(MachineState state){
+		currentState = state;
+	}
 
 	@Override
-	public Move stateMachineSelectMove(long timeout)
-			throws TransitionDefinitionException, MoveDefinitionException,
-			GoalDefinitionException {
-		// TODO Auto-generated method stub
-		return null;
+	public Move stateMachineSelectMove(long timeout) throws TransitionDefinitionException, MoveDefinitionException, GoalDefinitionException {
+		
+		timeout -= 500;
+		
+		
+		return mcts(timeout);
 	}
 	
 	
 	@Override
 	public void stateMachineMetaGame(long timeout) throws TransitionDefinitionException, MoveDefinitionException, GoalDefinitionException
 	{
-		// Sample gamers do no metagaming at the beginning of the match.
+		theMachine = getStateMachine();
+		root = new NonTerminalNode(currentState);
+		role = theMachine.getRoleIndices().get(getRole());
+		timeout -= 500;
+		
 	}	
 	
+	/**
+	 * 
+	 * @param timeout time limit.
+	 * @return the best move
+	 */
+	private Move mcts(long timeout){
+		Move bestMove = null;
+		double bestScore = Double.NEGATIVE_INFINITY;
+		
+		
+		return null;
+	}
 	
+	private void mctsStep(long timeout) throws TimeoutException{
+		
+		
+	}
+	
+	/**
+	 * Calculates UCT for MCTS
+	 * @param n total number of simulations
+	 * @param na number of simulations for this action
+	 * @return confidence bound
+	 */
+	public static double uct(int n, int na){
+		return C * Math.sqrt(Math.log(n)/na);
+	}
 
 }
