@@ -87,7 +87,8 @@ public class Heuristics {
 		double ret = 0;
 		ret += weights[0] * evaluate_mobility(move);
 		ret += weights[1] * evaluate_novelty(state, transposition);
-		ret += weights[2] * inverse(evaluate_mobility(move));
+		//ret += weights[2] * inverse(evaluate_mobility(move));
+		ret *= 1.5;		//Instead of using inverse mobility, wich would cancel itself out with mobility, just scale it up.
 		if(ret > MAX_HEURISTIC){
 			ret = MAX_HEURISTIC;
 		}
