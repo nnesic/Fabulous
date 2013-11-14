@@ -166,18 +166,54 @@ final class FabulousMonteCarlo extends SampleGamer {
 	}
 	
 	/**
-	 * Recursively performs one MCTS step.
+	 * Performs one MCTS step.
 	 * 
 	 * @param timeout Time limit
+	 * @return Index of the move performed by the player in the root state
 	 * @throws TimeoutException Time limit reached
 	 */
 	private int mctsStep(long timeout) throws TimeoutException{
+		List<Node> path = new ArrayList<Node>();
+		int[] scores;
+		Node current = root;
+		NonTerminalNode c;
+		int rootMove = -1;
+		while(current != null){
+			path.add(current);
+			if(current instanceof TerminalNode){
+				scores = ((TerminalNode)current).goal;
+				break;
+			}
+			c = (NonTerminalNode)current;
+			int[] select = new int[theMachine.getRoles().size()];
+			for(int p = 0; p < theMachine.getRoles().size(); p++){
+				List<Move> moves = c.legal.get(p);
+				double bestval = Double.NEGATIVE_INFINITY;
+				int bestmove = -1;
+				for(int m = 0; m < moves.size(); m++){
+					double value = c.q_action[p][m] + uct(c.n, c.n_action[p][m]);
+					if(value > bestval){
+						bestval = value;
+						bestmove = m;
+					}
+				}
+				select[p] = bestmove;
+				//Continue here.
+			}
+		}
 		
-		
-		
-		
-		return 0;
-		
+		return rootMove;
+	}
+	
+	/**
+	 * Recursively performs Monte-Carlo simulation.
+	 * 
+	 * @param node Node to start at
+	 * @param timeout Time limit
+	 * @return Scores for all players
+	 */
+	private int[] playout(Node node, long timeout){
+		return null;
 	}
 	
 	/**
