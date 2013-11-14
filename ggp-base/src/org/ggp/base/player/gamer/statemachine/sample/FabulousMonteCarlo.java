@@ -41,8 +41,8 @@ final class FabulousMonteCarlo extends SampleGamer {
 		final List<List<Move>> legal;
 		Map<int[], Node> successors;
 		int n;
-		int[][] n_action;
-		double[][] q_action;
+		int [][] n_action;
+		double [][] q_action;
 		
 		/**
 		 * @param state Game state
@@ -111,7 +111,7 @@ final class FabulousMonteCarlo extends SampleGamer {
 	
 	private StateMachine theMachine;
 	
-	private Node root;
+	private NonTerminalNode root;
 	
 	private MachineState currentState;
 	
@@ -135,6 +135,7 @@ final class FabulousMonteCarlo extends SampleGamer {
 		role = theMachine.getRoleIndices().get(getRole());
 		timeout -= 500;
 		mcts(timeout);
+	
 	}	
 	
 	/**
@@ -146,8 +147,22 @@ final class FabulousMonteCarlo extends SampleGamer {
 	private Move mcts(long timeout){
 		Move bestMove = null;
 		double bestScore = Double.NEGATIVE_INFINITY;
+		while(System.currentTimeMillis() < timeout){
+			int next;
+			try {
+				next = mctsStep(timeout);
+			} catch (TimeoutException e) {
+				break;
+			}
+			double score = root.q_action[role][next] - uct(root.n, root.n_action[role][next]);
+			if(score > bestScore){
+				bestScore = score;
+				bestMove = root.legal.get(role).get(next);
+			}
+			
+		}
 		
-		return null;
+		return bestMove;
 	}
 	
 	/**
@@ -156,7 +171,12 @@ final class FabulousMonteCarlo extends SampleGamer {
 	 * @param timeout Time limit
 	 * @throws TimeoutException Time limit reached
 	 */
-	private void mctsStep(long timeout) throws TimeoutException{
+	private int mctsStep(long timeout) throws TimeoutException{
+		
+		
+		
+		
+		return 0;
 		
 	}
 	
