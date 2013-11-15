@@ -28,7 +28,7 @@ final class FabulousMonteCarlo extends SampleGamer {
 	/**
 	 * Class representing a node of the MCTS tree
 	 */
-	private abstract class Node{
+	protected abstract class Node{
 		
 	}
 	
@@ -109,7 +109,7 @@ final class FabulousMonteCarlo extends SampleGamer {
 	
 	private final TimeoutException timeoutException = new TimeoutException();
 	
-	private StateMachine theMachine;
+	protected StateMachine theMachine;
 	
 	private NonTerminalNode root;
 	
@@ -161,7 +161,6 @@ final class FabulousMonteCarlo extends SampleGamer {
 			}
 			
 		}
-		
 		return bestMove;
 	}
 	
@@ -173,32 +172,71 @@ final class FabulousMonteCarlo extends SampleGamer {
 	 * @throws TimeoutException Time limit reached
 	 */
 	private int mctsStep(long timeout) throws TimeoutException{
-		List<Node> path = new ArrayList<Node>();
+		List<NonTerminalNode> path = new ArrayList<NonTerminalNode>();
 		int[] scores;
 		Node current = root;
-		NonTerminalNode c;
+		NonTerminalNode c = (NonTerminalNode)root;
 		int rootMove = -1;
+		
+		// Selection
+		List<int[]> select = new ArrayList<int[]>();
+		List<Move> selectM = new ArrayList<Move>();
 		while(current != null){
-			path.add(current);
 			if(current instanceof TerminalNode){
 				scores = ((TerminalNode)current).goal;
 				break;
 			}
 			c = (NonTerminalNode)current;
-			int[] select = new int[theMachine.getRoles().size()];
+			path.add(c);
+			select.add(new int[theMachine.getRoles().size()]);
+			selectM = new ArrayList<Move>();
 			for(int p = 0; p < theMachine.getRoles().size(); p++){
 				List<Move> moves = c.legal.get(p);
 				double bestval = Double.NEGATIVE_INFINITY;
-				int bestmove = -1;
-				for(int m = 0; m < moves.size(); m++){
-					double value = c.q_action[p][m] + uct(c.n, c.n_action[p][m]);
+				Move bestmove = null;
+				int bestindex = -1;
+				for(int i = 0; i < moves.size(); i++){
+					Move m = moves.get(i);
+					double value = c.q_action[p][i] + uct(c.n, c.n_action[p][i]);
 					if(value > bestval){
 						bestval = value;
 						bestmove = m;
+						bestindex = i;
 					}
 				}
-				select[p] = bestmove;
-				//Continue here.
+				select.get(select.size() - 1)[p] = bestindex;
+				selectM.add(bestmove);
+			}
+			if(current == root){
+				rootMove = select.get(select.size() - 1)[role];
+			}
+			current = c.successors.get(select);
+		}
+		
+		// Expansion & Playout
+		MachineState next;
+		try {
+			next = theMachine.getNextState(c.state, selectM);
+		} catch (TransitionDefinitionException e) {
+			System.err.println("Could not perform state update.");
+			return rootMove;
+		}
+		if(theMachine.isTerminal(next)){
+			current = new TerminalNode(next);
+		}
+		else{
+			current = new NonTerminalNode(next);
+		}
+		c.successors.put(select.get(select.size() - 1), current);
+		scores = playout(current, timeout);
+		
+		// Backpropagation
+		for(int i = 0; i < path.size(); i++){
+			NonTerminalNode node = path.get(i);
+			for(int j = 0; j < theMachine.getRoles().size(); j++){
+				node.n_action[j][select.get(i)[j]]++;
+				node.q_action[j][select.get(i)[j]] = (node.q_action[j][select.get(i)[j]] * node.n_action[j][select.get(i)[j]] + scores[i])
+						/ (node.n_action[j][select.get(i)[j]] + 1);
 			}
 		}
 		
