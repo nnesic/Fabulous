@@ -18,6 +18,7 @@ public final class FabulousPlayer extends SampleGamer {
 	private final SampleGamer singlePlayer = new FabulousSinglePlayer2();
 	
 	private final SampleGamer multiPlayer = new FabulousMultiPlayer2();
+	private final SampleGamer montecarlo = new FabulousMonteCarlo();
 	
 	private SampleGamer currentPlayer;
 	
@@ -28,10 +29,10 @@ public final class FabulousPlayer extends SampleGamer {
 		StateMachine m = getStateMachine();
 		int roles = m.getRoles().size();
 		if(roles == 1){
-			currentPlayer = singlePlayer;
+			currentPlayer = montecarlo;
 		}
 		else{
-			currentPlayer = multiPlayer;
+			currentPlayer = montecarlo;
 		}
 		currentPlayer.setMatch(this.getMatch());
 		currentPlayer.setRoleName(this.getRoleName());
