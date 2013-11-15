@@ -89,7 +89,7 @@ final class FabulousMonteCarlo extends SampleGamer {
 				temp = new ArrayList<Integer>();
 			}
 			 goal = new int[temp.size()];
-			 for(Integer i : temp){
+			 for(int i = 0; i < goal.length; i++){
 				 goal[i] = temp.get(i);
 			 }
 		}
@@ -128,7 +128,7 @@ final class FabulousMonteCarlo extends SampleGamer {
 	
 	@Override
 	public Move stateMachineSelectMove(long timeout) throws TransitionDefinitionException, MoveDefinitionException, GoalDefinitionException{
-		timeout -= 500;
+		timeout -= 1000;
 		Move m = mcts(timeout);
 		if(m != null){
 			return m;
@@ -142,7 +142,7 @@ final class FabulousMonteCarlo extends SampleGamer {
 		theMachine = getStateMachine();
 		root = new NonTerminalNode(currentState);
 		role = theMachine.getRoleIndices().get(getRole());
-		timeout -= 500;
+		timeout -= 1000;
 		mcts(timeout);
 		started = true;
 	}
