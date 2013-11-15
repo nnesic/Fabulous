@@ -103,9 +103,27 @@ final class FabulousMonteCarlo extends SampleGamer {
 	
 	private int role;
 	
+	private boolean started = false;
+	
 	@Override
 	public void setState(MachineState state){
 		currentState = state;
+		if(! started){
+			return;
+		}
+		if(root != null){
+			for(Node n : root.successors.values()){
+				if(n instanceof TerminalNode){
+					continue;
+				}
+				NonTerminalNode node = (NonTerminalNode)n;
+				if(node.state.equals(state)){
+					root = node;
+					return;
+				}
+			}
+		}
+		root = new NonTerminalNode(state);
 	}
 	
 	@Override
@@ -126,8 +144,18 @@ final class FabulousMonteCarlo extends SampleGamer {
 		role = theMachine.getRoleIndices().get(getRole());
 		timeout -= 500;
 		mcts(timeout);
+		started = true;
+	}
 	
-	}	
+	@Override
+	public void stateMachineStop(){
+		started = false;
+	}
+	
+	@Override
+	public void stateMachineAbort(){
+		started = false;
+	}
 	
 	/**
 	 * Performs Monte-Carlo tree search.
@@ -185,7 +213,13 @@ final class FabulousMonteCarlo extends SampleGamer {
 				int bestindex = -1;
 				for(int i = 0; i < moves.size(); i++){
 					Move m = moves.get(i);
+					if(c.n == 0){
+						bestmove = moves.get(0);
+						bestindex = 0;
+						break;
+					}
 					double value = c.q_action[p][i] + uct(c.n, c.n_action[p][i]);
+					//System.out.println("Found a move with score " + value);
 					if(value > bestval){
 						bestval = value;
 						bestmove = m;
