@@ -105,6 +105,8 @@ final class FabulousMonteCarlo extends SampleGamer {
 	
 	private boolean started = false;
 	
+	private int counter;
+	
 	@Override
 	public void setState(MachineState state){
 		currentState = state;
@@ -164,6 +166,7 @@ final class FabulousMonteCarlo extends SampleGamer {
 	 * @return Best move in the root state
 	 */
 	private Move mcts(long timeout){
+		counter = 0;
 		Move bestMove = null;
 		double bestScore = Double.NEGATIVE_INFINITY;
 		while(System.currentTimeMillis() < timeout){
@@ -177,6 +180,7 @@ final class FabulousMonteCarlo extends SampleGamer {
 				bestMove = root.legal.get(role).get(next);
 			}
 		}
+		System.out.println("Did " + counter + " MCTS steps.");
 		return bestMove;
 	}
 	
@@ -265,6 +269,7 @@ final class FabulousMonteCarlo extends SampleGamer {
 			}
 		}
 		
+		counter++;
 		return rootMove;
 	}
 	
