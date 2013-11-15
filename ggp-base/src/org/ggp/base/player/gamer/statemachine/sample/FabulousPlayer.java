@@ -10,7 +10,7 @@ import org.ggp.base.util.statemachine.exceptions.TransitionDefinitionException;
 /**
  * The fabulous player.
  * 
- * @author Nera, Nicolai
+ * @author Nera, Nicolai, Irme
  *
  */
 public final class FabulousPlayer extends SampleGamer {
@@ -18,6 +18,7 @@ public final class FabulousPlayer extends SampleGamer {
 	private final SampleGamer singlePlayer = new FabulousSinglePlayer2();
 	
 	private final SampleGamer multiPlayer = new FabulousMultiPlayer2();
+	
 	private final SampleGamer montecarlo = new FabulousMonteCarlo();
 	
 	private SampleGamer currentPlayer;

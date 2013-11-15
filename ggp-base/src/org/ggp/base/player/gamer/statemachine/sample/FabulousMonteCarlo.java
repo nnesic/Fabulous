@@ -19,9 +19,9 @@ import org.ggp.base.util.statemachine.exceptions.TransitionDefinitionException;
  */
 final class FabulousMonteCarlo extends SampleGamer {
 	
-	private static final int MAX_SCORE = 100;
+	//private static final int MAX_SCORE = 100;
 	
-	private static final int MIN_SCORE = 0;
+	//private static final int MIN_SCORE = 0;
 	
 	private static final double C = 1.0;
 	
