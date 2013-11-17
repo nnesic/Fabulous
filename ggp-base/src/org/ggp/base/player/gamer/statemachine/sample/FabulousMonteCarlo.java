@@ -196,12 +196,15 @@ final class FabulousMonteCarlo extends SampleGamer {
 		int[] scores;
 		Node current = root;
 		NonTerminalNode c = (NonTerminalNode)root;
-		int rootMove = -1;
+		//int rootMove = -1;
 		
 		// Selection
 		List<int[]> select = new ArrayList<int[]>();
 		List<Move> selectM = new ArrayList<Move>();
 		while(current != null){
+			if(System.currentTimeMillis() > timeout){
+				return -1;
+			}
 			if(current instanceof TerminalNode){
 				scores = ((TerminalNode)current).goal;
 				break;
@@ -233,9 +236,11 @@ final class FabulousMonteCarlo extends SampleGamer {
 				select.get(select.size() - 1)[p] = bestindex;
 				selectM.add(bestmove);
 			}
+			/*
 			if(current == root){
 				rootMove = select.get(select.size() - 1)[role];
 			}
+			*/
 			current = c.successors.get(select);
 		}
 		
@@ -262,6 +267,7 @@ final class FabulousMonteCarlo extends SampleGamer {
 		// Backpropagation
 		for(int i = 0; i < path.size(); i++){
 			NonTerminalNode node = path.get(i);
+			node.n++;
 			for(int j = 0; j < theMachine.getRoles().size(); j++){
 				node.n_action[j][select.get(i)[j]]++;
 				node.q_action[j][select.get(i)[j]] = (node.q_action[j][select.get(i)[j]] * node.n_action[j][select.get(i)[j]] + scores[i])
@@ -270,7 +276,7 @@ final class FabulousMonteCarlo extends SampleGamer {
 		}
 		
 		counter++;
-		return rootMove;
+		return select.get(0)[role];
 	}
 	
 	/**
