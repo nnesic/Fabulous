@@ -27,7 +27,7 @@ final class FabulousMonteCarlo extends SampleGamer {
 	
 	protected static final ReferenceStrength SOFT = AbstractReferenceMap.ReferenceStrength.SOFT;
 	
-	private static final double C = 1.0;
+	private static final double C = 40.0;
 	
 	/**
 	 * Class representing a node of the MCTS tree
@@ -53,14 +53,15 @@ final class FabulousMonteCarlo extends SampleGamer {
 		 */
 		protected NonTerminalNode(MachineState state){
 			this.state = state;
-			List<List<Move>> temp;
-			try {
-				temp = theMachine.getLegalJointMoves(state);
-			} catch (MoveDefinitionException e) {
-				System.err.println("Couldn't compute legal moves.");
-				temp = null;
+			legal = new ArrayList<List<Move>>();
+			for(Role r : theMachine.getRoles()){
+				try {
+					legal.add(theMachine.getLegalMoves(state, r));
+				} catch (MoveDefinitionException e) {
+					System.err.println("Could not compute legal moves.");
+					legal.add(new ArrayList<Move>());
+				}
 			}
-			legal = temp;
 			n = 0;
 			n_action = new int[theMachine.getRoles().size()][];
 			q_action = new double[n_action.length][];
@@ -134,7 +135,7 @@ final class FabulousMonteCarlo extends SampleGamer {
 	
 	@Override
 	public Move stateMachineSelectMove(long timeout) throws TransitionDefinitionException, MoveDefinitionException, GoalDefinitionException{
-		timeout -= 1000;
+		timeout -= 15000;
 		Move m = mcts(timeout);
 		if(m != null){
 			return m;
@@ -148,7 +149,7 @@ final class FabulousMonteCarlo extends SampleGamer {
 		theMachine = getStateMachine();
 		root = new NonTerminalNode(currentState);
 		role = theMachine.getRoleIndices().get(getRole());
-		timeout -= 1000;
+		timeout -= 15000;
 		mcts(timeout);
 		started = true;
 	}
@@ -171,9 +172,11 @@ final class FabulousMonteCarlo extends SampleGamer {
 	 */
 	private Move mcts(long timeout){
 		counter = 0;
-		Move bestMove = null;
-		double bestScore = Double.NEGATIVE_INFINITY;
+		//Move bestMove = null;
+		//double bestScore = Double.NEGATIVE_INFINITY;
 		while(System.currentTimeMillis() < timeout){
+			mctsStep(timeout);
+			/*
 			int next = mctsStep(timeout);
 			if(next == -1){
 				continue;
@@ -183,9 +186,18 @@ final class FabulousMonteCarlo extends SampleGamer {
 				bestScore = score;
 				bestMove = root.legal.get(role).get(next);
 			}
+			*/
 		}
 		System.out.println("Did " + counter + " MCTS steps.");
-		return bestMove;
+		int best = -1;
+		int bestScore = Integer.MIN_VALUE;
+		for(int i = 0; i < root.n_action[role].length; i++){
+			if(root.n_action[role][i] > bestScore){
+				bestScore = root.n_action[role][i];
+				best = i;
+			}
+		}
+		return (best == -1) ? null : root.legal.get(role).get(best);
 	}
 	
 	/**
