@@ -2,10 +2,12 @@ package org.ggp.base.player.gamer.statemachine.sample;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.collections4.map.AbstractReferenceMap;
+import org.apache.commons.collections4.map.AbstractReferenceMap.ReferenceStrength;
+import org.apache.commons.collections4.map.ReferenceMap;
 import org.ggp.base.util.statemachine.*;
 import org.ggp.base.util.statemachine.exceptions.GoalDefinitionException;
 import org.ggp.base.util.statemachine.exceptions.MoveDefinitionException;
@@ -22,6 +24,8 @@ final class FabulousMonteCarlo extends SampleGamer {
 	//private static final int MAX_SCORE = 100;
 	
 	//private static final int MIN_SCORE = 0;
+	
+	protected static final ReferenceStrength SOFT = AbstractReferenceMap.ReferenceStrength.SOFT;
 	
 	private static final double C = 1.0;
 	
@@ -66,7 +70,7 @@ final class FabulousMonteCarlo extends SampleGamer {
 				Arrays.fill(n_action[i], 0);
 				Arrays.fill(q_action[i], 0);
 			}
-			successors = new HashMap<int[], Node>();
+			successors = new ReferenceMap<int[], Node>(SOFT, SOFT);
 		}
 	}
 	
