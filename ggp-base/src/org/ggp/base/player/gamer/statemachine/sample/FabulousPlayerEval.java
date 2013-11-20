@@ -13,7 +13,7 @@ import org.ggp.base.util.statemachine.exceptions.TransitionDefinitionException;
  * @author Nera, Nicolai, Irme
  *
  */
-public final class FabulousPlayer extends SampleGamer {
+public final class FabulousPlayerEval extends SampleGamer {
 	
 	private final SampleGamer singlePlayer = new FabulousSinglePlayer2();
 	
