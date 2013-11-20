@@ -15,6 +15,10 @@ import org.ggp.base.util.statemachine.exceptions.TransitionDefinitionException;
  */
 public final class FabulousPlayer extends SampleGamer {
 	
+	/*{
+		System.out.println("Free: " + Runtime.getRuntime().freeMemory() + "\nTotal: " + Runtime.getRuntime().totalMemory() + "\nMax: " + Runtime.getRuntime().maxMemory());
+	}*/
+	
 	private final SampleGamer singlePlayer = new FabulousSinglePlayer2();
 	
 	private final SampleGamer multiPlayer = new FabulousMultiPlayer2();
@@ -33,11 +37,11 @@ public final class FabulousPlayer extends SampleGamer {
 			currentPlayer = singlePlayer;
 		}
 		else{
-			if (m.getRoleIndices().get(getRole())==0){
+			if (m.getRoleIndices().get(getRole()) == 0){
 				currentPlayer = montecarlo;
 			}
 			else{
-			currentPlayer = multiPlayer;
+				currentPlayer = multiPlayer;
 			}
 		}
 		currentPlayer.setMatch(this.getMatch());
