@@ -1,8 +1,7 @@
 package org.ggp.base.player.gamer.statemachine.sample;
 
-import org.ggp.base.player.gamer.exception.MetaGamingException;
+import org.ggp.base.util.statemachine.MachineState;
 import org.ggp.base.util.statemachine.Move;
-import org.ggp.base.util.statemachine.StateMachine;
 import org.ggp.base.util.statemachine.exceptions.GoalDefinitionException;
 import org.ggp.base.util.statemachine.exceptions.MoveDefinitionException;
 import org.ggp.base.util.statemachine.exceptions.TransitionDefinitionException;
@@ -25,32 +24,38 @@ public final class FabulousPlayer extends SampleGamer {
 	
 	private final SampleGamer montecarlo = new FabulousMonteCarlo();
 	
-	private SampleGamer currentPlayer;
+	private PlayerThread currentPlayer;
 	
 	@Override
 	public void stateMachineMetaGame(long timeout){
 		long total = System.currentTimeMillis();
 		System.out.println();
-		StateMachine m = getStateMachine();
-		int roles = m.getRoles().size();
+		theMachine = getStateMachine();
+		int roles = theMachine.getRoles().size();
+		SampleGamer p;
 		if(roles == 1){
-			currentPlayer = singlePlayer;
+			p = singlePlayer;
 		}
 		else{
-			if (m.getRoleIndices().get(getRole()) == 0){
-				currentPlayer = montecarlo;
+			if (theMachine.getRoleIndices().get(getRole()) == 0){
+				p = montecarlo;
 			}
 			else{
-				currentPlayer = multiPlayer;
+				p = multiPlayer;
 			}
 		}
-		currentPlayer.setMatch(this.getMatch());
-		currentPlayer.setRoleName(this.getRoleName());
-		currentPlayer.setState(m.getInitialState());
+		p.setMatch(this.getMatch());
+		p.setMachine(theMachine);
+		p.setRoleName(this.getRoleName());
+		currentPlayer = new PlayerThread(p);
+		currentPlayer.setState(theMachine.getInitialState());
+		currentPlayer.setMetaGame(true);
+		currentPlayer.setTimeout(timeout);
+		currentPlayer.start();
 		try {
-			currentPlayer.metaGame(timeout);
-		} catch (MetaGamingException e) {
-			System.err.println("Metagaming failed!");
+			currentPlayer.join();
+		} catch (InterruptedException e) {
+			System.err.println("Thread interrupted.");
 		}
 		total = System.currentTimeMillis() - total;
 		System.out.println("Completed metagaming in " + total + "ms.");
@@ -60,10 +65,23 @@ public final class FabulousPlayer extends SampleGamer {
 	public Move stateMachineSelectMove(long timeout) throws TransitionDefinitionException, MoveDefinitionException, GoalDefinitionException{
 		long total = System.currentTimeMillis();
 		currentPlayer.setState(getCurrentState());
-		Move move = currentPlayer.stateMachineSelectMove(timeout);
+		currentPlayer.setMetaGame(false);
+		currentPlayer.setTimeout(timeout);
+		currentPlayer.start();
+		try {
+			currentPlayer.join();
+		} catch (InterruptedException e) {
+			System.err.println("Thread interrupted.");
+		}
+		Move move = currentPlayer.getResult();
 		total = System.currentTimeMillis() - total;
 		System.out.println("Selected move in " + total + "ms.");
 		return move;
+	}
+
+	@Override
+	public void setState(MachineState state) {
+		
 	}
 	
 }

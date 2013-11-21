@@ -51,7 +51,7 @@ final class FabulousSinglePlayer2 extends SampleGamer {
 	
 	private MachineState currentState;
 	
-	private StateMachine theMachine;
+	//private StateMachine theMachine;
 	
 	private boolean foundSolution = false;
 	
@@ -83,7 +83,7 @@ final class FabulousSinglePlayer2 extends SampleGamer {
 		foundSolution = false;
 		completed = new ReferenceMap<MachineState, Boolean>(soft, soft);
 		seen = new ReferenceMap<MachineState, Integer>(soft, soft);
-		theMachine = getStateMachine();
+		//theMachine = getStateMachine();
 		heuristic = new Heuristics( theMachine);
 		upperSearch(theMachine, theMachine.getInitialState(), timeout);
 	}

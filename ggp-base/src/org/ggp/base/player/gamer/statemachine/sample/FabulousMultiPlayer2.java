@@ -9,7 +9,6 @@ import org.apache.commons.collections4.map.AbstractReferenceMap.ReferenceStrengt
 import org.ggp.base.util.statemachine.MachineState;
 import org.ggp.base.util.statemachine.Move;
 import org.ggp.base.util.statemachine.Role;
-import org.ggp.base.util.statemachine.StateMachine;
 import org.ggp.base.util.statemachine.exceptions.GoalDefinitionException;
 import org.ggp.base.util.statemachine.exceptions.MoveDefinitionException;
 import org.ggp.base.util.statemachine.exceptions.TransitionDefinitionException;
@@ -78,7 +77,7 @@ final class FabulousMultiPlayer2 extends SampleGamer {
 
 	private Role role;
 
-	private StateMachine theMachine;
+	//private StateMachine theMachine;
 
 	private MachineState currentState;
 
@@ -103,7 +102,7 @@ final class FabulousMultiPlayer2 extends SampleGamer {
 		timeout -= 1000;
 		this.timeout = timeout;
 		this.turnpoint = ((TIME_DIV - TIME_MULT) * System.currentTimeMillis() + TIME_MULT * timeout) / TIME_DIV;
-		theMachine = getStateMachine();
+		//theMachine = getStateMachine();
 		role = getRole();
 		transposition = new ReferenceMap<MachineState, Tuple>(SOFT, SOFT);
 		transpositionMin = new ReferenceMap <MachineState, Map <Move, Tuple>> (SOFT, SOFT);

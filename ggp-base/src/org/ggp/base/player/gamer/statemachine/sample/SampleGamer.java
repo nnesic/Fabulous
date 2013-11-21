@@ -19,15 +19,21 @@ import org.ggp.base.util.statemachine.implementation.prover.ProverStateMachine;
  */
 public abstract class SampleGamer extends StateMachineGamer
 {
+	
+	protected StateMachine theMachine;
+	
+	public void setMachine(StateMachine m){
+		theMachine = m;
+		
+	}
+	
 	/**
 	 * Sets the current state.
 	 * Used by FabulousPlayer.
 	 * 
 	 * @param state New state
 	 */
-	public void setState(MachineState state){
-		
-	}
+	public abstract void setState(MachineState state);
 	
 	@Override
 	public String getName() {

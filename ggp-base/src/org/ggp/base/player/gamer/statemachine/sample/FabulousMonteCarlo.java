@@ -100,7 +100,7 @@ final class FabulousMonteCarlo extends SampleGamer {
 		}
 	}
 	
-	protected StateMachine theMachine;
+	//protected StateMachine theMachine;
 	
 	private NonTerminalNode root;
 	
@@ -147,7 +147,7 @@ final class FabulousMonteCarlo extends SampleGamer {
 	@Override
 	public void stateMachineMetaGame(long timeout) throws TransitionDefinitionException, MoveDefinitionException, GoalDefinitionException{
 		started = false;
-		theMachine = getStateMachine();
+		//theMachine = getStateMachine();
 		root = new NonTerminalNode(currentState);
 		role = theMachine.getRoleIndices().get(getRole());
 		timeout -= 5000;
