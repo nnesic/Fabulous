@@ -23,7 +23,7 @@ final class FabulousMonteCarlo extends SampleGamer {
 	
 	//private static final int MAX_SCORE = 100;
 	
-	//private static final int MIN_SCORE = 0;
+	private static final int MIN_SCORE = 0;
 	
 	protected static final ReferenceStrength SOFT = AbstractReferenceMap.ReferenceStrength.SOFT;
 	
@@ -201,8 +201,8 @@ final class FabulousMonteCarlo extends SampleGamer {
 				confidence = (int)(root.q_action[role][i] - uct(root.n, root.n_action[role][i]));
 			}
 		}
-		if(confidence < 0){
-			confidence = 0;
+		if(confidence < MIN_SCORE){
+			confidence = MIN_SCORE;
 		}
 		return (best == -1) ? null : root.legal.get(role).get(best);
 	}

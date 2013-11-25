@@ -183,7 +183,7 @@ final class FabulousMultiPlayer2 extends SampleGamer {
 		Search:
 			while(notDone){
 				if(System.currentTimeMillis() > timeout){
-					System.out.println("Ran out of time!");
+					System.out.println("Minimax ran out of time!");
 					break;
 				}
 				depth++;
@@ -199,7 +199,7 @@ final class FabulousMultiPlayer2 extends SampleGamer {
 					try {
 						tempScore = minPlayer (state, move, minMoves, fabulous, depth, alpha, beta);
 					} catch (TimeoutException e){
-						System.out.println("Ran out of time!");
+						System.out.println("Minimax ran out of time!");
 						notDone = true;
 						break Search;
 					}
@@ -221,10 +221,10 @@ final class FabulousMultiPlayer2 extends SampleGamer {
 				}
 			}
 		if(notDone){
-			confidence = 0;
+			confidence = MIN_SCORE;
 		}
 		else{
-			confidence = 100;
+			confidence = bestScore;
 		}
 		if(bestScore != Integer.MIN_VALUE){
 			if(! useHeuristic){

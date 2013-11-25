@@ -18,6 +18,10 @@ import org.ggp.base.util.statemachine.exceptions.TransitionDefinitionException;
  */
 public final class FabulousPlayer extends SampleGamer {
 	
+	private static final int MIN_SCORE = 0;
+	
+	//private static final int MAX_SCORE = 100;
+	
 	/*{
 		System.out.println("Free: " + Runtime.getRuntime().freeMemory() + "\nTotal: " + Runtime.getRuntime().totalMemory() + "\nMax: " + Runtime.getRuntime().maxMemory());
 	}*/
@@ -96,7 +100,7 @@ public final class FabulousPlayer extends SampleGamer {
 			System.err.println("Interrupted while waiter for player threads.");
 		}
 		Move best = null;
-		int confidence = -1;
+		int confidence = MIN_SCORE - 1;
 		PlayerThread winner = null;
 		for(PlayerThread p : currentPlayers){
 			Result r = p.getResult();
@@ -111,7 +115,7 @@ public final class FabulousPlayer extends SampleGamer {
 			best = theMachine.getRandomMove(getCurrentState(), getRole());
 		}
 		else{
-			System.out.println("Decision by " + winner.getName() + ".");
+			System.out.println("Decision by " + winner.getName() + ". (Confidence " + confidence + ")");
 		}
 		total = System.currentTimeMillis() - total;
 		System.out.println("Selected move in " + total + "ms.");
