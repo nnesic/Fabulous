@@ -37,14 +37,14 @@ public final class FabulousPlayer extends SampleGamer {
 		int roles = theMachine.getRoles().size();
 		SampleGamer p;
 		if(roles == 1){
-			p = new FabulousSinglePlayer2();
+			p = new FabulousMonteCarlo();
 		}
 		else{
 			if (theMachine.getRoleIndices().get(getRole()) == 0){
 				p = new FabulousMonteCarlo();
 			}
 			else{
-				p = new FabulousMultiPlayer2();
+				p = new FabulousMonteCarlo();
 			}
 		}
 		p.setMatch(getMatch());

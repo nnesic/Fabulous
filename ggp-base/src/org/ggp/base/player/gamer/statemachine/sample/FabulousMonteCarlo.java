@@ -226,7 +226,7 @@ final class FabulousMonteCarlo extends SampleGamer {
 			}
 			c = (NonTerminalNode)current;
 			path.add(c);
-			select.add(new int[theMachine.getRoles().size()]);
+			int[] selectEntry = new int[theMachine.getRoles().size()];
 			selectM = new ArrayList<Move>();
 			for(int p = 0; p < theMachine.getRoles().size(); p++){
 				List<Move> moves = c.legal.get(p);
@@ -248,9 +248,10 @@ final class FabulousMonteCarlo extends SampleGamer {
 						bestindex = i;
 					}
 				}
-				select.get(select.size() - 1)[p] = bestindex;
+				selectEntry[p] = bestindex;
 				selectM.add(bestmove);
 			}
+			select.add(selectEntry);
 			/*
 			if(current == root){
 				rootMove = select.get(select.size() - 1)[role];
