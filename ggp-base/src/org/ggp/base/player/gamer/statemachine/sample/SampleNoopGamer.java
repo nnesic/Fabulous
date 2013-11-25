@@ -3,6 +3,7 @@ package org.ggp.base.player.gamer.statemachine.sample;
 import org.ggp.base.apps.player.detail.DetailPanel;
 import org.ggp.base.apps.player.detail.EmptyDetailPanel;
 import org.ggp.base.util.gdl.grammar.GdlPool;
+import org.ggp.base.util.statemachine.MachineState;
 import org.ggp.base.util.statemachine.Move;
 import org.ggp.base.util.statemachine.exceptions.GoalDefinitionException;
 import org.ggp.base.util.statemachine.exceptions.MoveDefinitionException;
@@ -23,5 +24,10 @@ public final class SampleNoopGamer extends SampleGamer
 	@Override
 	public DetailPanel getDetailPanel() {
 		return new EmptyDetailPanel();
+	}
+
+	@Override
+	public void setState(MachineState state) {
+		
 	}
 }

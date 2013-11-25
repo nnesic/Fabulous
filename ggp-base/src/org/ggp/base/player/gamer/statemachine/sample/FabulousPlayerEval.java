@@ -1,6 +1,7 @@
 package org.ggp.base.player.gamer.statemachine.sample;
 
 import org.ggp.base.player.gamer.exception.MetaGamingException;
+import org.ggp.base.util.statemachine.MachineState;
 import org.ggp.base.util.statemachine.Move;
 import org.ggp.base.util.statemachine.StateMachine;
 import org.ggp.base.util.statemachine.exceptions.GoalDefinitionException;
@@ -60,6 +61,11 @@ public final class FabulousPlayerEval extends SampleGamer {
 		total = System.currentTimeMillis() - total;
 		System.out.println("Selected move in " + total + "ms.");
 		return move;
+	}
+
+	@Override
+	public void setState(MachineState state) {
+		// TODO: This is now part of every SampleGamer
 	}
 	
 }

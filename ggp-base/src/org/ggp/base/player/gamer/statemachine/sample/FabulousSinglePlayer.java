@@ -46,6 +46,11 @@ final class FabulousSinglePlayer extends SampleGamer {
 	private ReferenceMap<MachineState, Object> completed;
 	
 	@Override
+	public void setState(MachineState state) {
+		
+	}
+	
+	@Override
 	public Move stateMachineSelectMove(long timeout) throws TransitionDefinitionException, MoveDefinitionException, GoalDefinitionException{
 		if(best == null || best.isEmpty()){
 			//System.out.println("No best solution, performing random move.");

@@ -87,4 +87,8 @@ public final class SampleMonteCarloGamer extends SampleGamer
             return 0;
         }
 	}
+	@Override
+	public void setState(MachineState state) {
+		
+	}
 }
