@@ -120,7 +120,7 @@ final class FabulousMultiPlayer2 extends SampleGamer {
 
 	@Override
 	public Move stateMachineSelectMove(long timeout) throws TransitionDefinitionException, MoveDefinitionException, GoalDefinitionException{
-		timeout -= 500;
+		timeout -= 1000;
 		this.timeout = timeout;
 		this.turnpoint = 0;
 		prune = false;

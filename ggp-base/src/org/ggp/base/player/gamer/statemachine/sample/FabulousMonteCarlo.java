@@ -142,7 +142,7 @@ final class FabulousMonteCarlo extends SampleGamer {
 	
 	@Override
 	public Move stateMachineSelectMove(long timeout) throws TransitionDefinitionException, MoveDefinitionException, GoalDefinitionException{
-		timeout -= 5000;
+		timeout -= 1000;
 		Move m = mcts(timeout);
 		if(m != null){
 			return m;
@@ -158,7 +158,7 @@ final class FabulousMonteCarlo extends SampleGamer {
 		root = new NonTerminalNode(currentState);
 		//System.out.println(getRole());
 		role = theMachine.getRoleIndices().get(getRole());
-		timeout -= 5000;
+		timeout -= 1000;
 		mcts(timeout);
 		started = true;
 	}
