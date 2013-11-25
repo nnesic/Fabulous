@@ -1,6 +1,7 @@
 package org.ggp.base.player.gamer.statemachine.sample;
 
 import org.ggp.base.util.statemachine.MachineState;
+import org.ggp.base.util.statemachine.Move;
 import org.ggp.base.util.statemachine.exceptions.GoalDefinitionException;
 import org.ggp.base.util.statemachine.exceptions.MoveDefinitionException;
 import org.ggp.base.util.statemachine.exceptions.TransitionDefinitionException;
@@ -64,7 +65,8 @@ public class PlayerThread implements Runnable {
 				player.stateMachineMetaGame(timeout);
 			} else{
 				result = new Result();
-				result = new Result(player.stateMachineSelectMove(timeout), player.getConfidence());
+				Move m = player.stateMachineSelectMove(timeout);
+				result = new Result(m, player.getConfidence());
 			} 
 		} catch (TransitionDefinitionException e) {
 			System.err.println("Could not compute state update.");
