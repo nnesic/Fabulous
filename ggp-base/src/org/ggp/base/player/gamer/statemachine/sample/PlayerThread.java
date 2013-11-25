@@ -64,7 +64,7 @@ public class PlayerThread implements Runnable {
 				player.stateMachineMetaGame(timeout);
 			} else{
 				result = new Result();
-				result = new Result(player.stateMachineSelectMove(timeout), 0);
+				result = new Result(player.stateMachineSelectMove(timeout), player.getConfidence());
 			} 
 		} catch (TransitionDefinitionException e) {
 			System.err.println("Could not compute state update.");
