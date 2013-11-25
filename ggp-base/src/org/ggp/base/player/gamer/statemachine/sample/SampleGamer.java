@@ -19,7 +19,12 @@ import org.ggp.base.util.statemachine.implementation.prover.ProverStateMachine;
  */
 public abstract class SampleGamer extends StateMachineGamer
 {
-	
+	/**
+	 * Sets the state machine repesenting the game.
+	 * Used by FabulousPlayer.
+	 * 
+	 * @param m StateMachine
+	 */
 	public abstract void setMachine(StateMachine m);
 	
 	/**

@@ -32,6 +32,17 @@ import org.ggp.base.util.statemachine.exceptions.TransitionDefinitionException;
  */
 public abstract class StateMachineGamer extends Gamer
 {
+	
+	/**
+	 * Sets the player's role.
+	 * Used by FabulousPlayer.
+	 * 
+	 * @param r Role
+	 */
+	public void setRole(Role r){
+		role = r;
+	}
+	
     // =====================================================================
     // First, the abstract methods which need to be overriden by subclasses.
     // These determine what state machine is used, what the gamer does during

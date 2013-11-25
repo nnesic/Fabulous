@@ -19,11 +19,11 @@ public final class FabulousPlayer extends SampleGamer {
 		System.out.println("Free: " + Runtime.getRuntime().freeMemory() + "\nTotal: " + Runtime.getRuntime().totalMemory() + "\nMax: " + Runtime.getRuntime().maxMemory());
 	}*/
 	
-	private final SampleGamer singlePlayer = new FabulousSinglePlayer2();
+	//private final SampleGamer singlePlayer = new FabulousSinglePlayer2();
 	
-	private final SampleGamer multiPlayer = new FabulousMultiPlayer2();
+	//private final SampleGamer multiPlayer = new FabulousMultiPlayer2();
 	
-	private final SampleGamer montecarlo = new FabulousMonteCarlo();
+	//private final SampleGamer montecarlo = new FabulousMonteCarlo();
 	
 	private PlayerThread currentPlayer;
 	
@@ -37,19 +37,19 @@ public final class FabulousPlayer extends SampleGamer {
 		int roles = theMachine.getRoles().size();
 		SampleGamer p;
 		if(roles == 1){
-			p = singlePlayer;
+			p = new FabulousSinglePlayer2();
 		}
 		else{
 			if (theMachine.getRoleIndices().get(getRole()) == 0){
-				p = montecarlo;
+				p = new FabulousMonteCarlo();
 			}
 			else{
-				p = multiPlayer;
+				p = new FabulousMultiPlayer2();
 			}
 		}
-		p.setMatch(this.getMatch());
+		p.setMatch(getMatch());
 		p.setMachine(theMachine);
-		p.setRoleName(this.getRoleName());
+		p.setRole(getRole());
 		currentPlayer = new PlayerThread(p);
 		currentPlayer.setState(theMachine.getInitialState());
 		currentPlayer.setMetaGame(true);

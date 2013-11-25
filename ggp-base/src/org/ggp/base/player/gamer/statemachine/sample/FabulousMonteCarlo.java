@@ -156,6 +156,7 @@ final class FabulousMonteCarlo extends SampleGamer {
 		started = false;
 		//theMachine = getStateMachine();
 		root = new NonTerminalNode(currentState);
+		//System.out.println(getRole());
 		role = theMachine.getRoleIndices().get(getRole());
 		timeout -= 5000;
 		mcts(timeout);
