@@ -19,6 +19,14 @@ import org.ggp.base.util.statemachine.implementation.prover.ProverStateMachine;
  */
 public abstract class SampleGamer extends StateMachineGamer
 {
+	
+	/**
+	 * Used by FabulousPlayer.
+	 * 
+	 * @return Confidence in its result
+	 */
+	public abstract int getConfidence();
+	
 	/**
 	 * Sets the state machine repesenting the game.
 	 * Used by FabulousPlayer.

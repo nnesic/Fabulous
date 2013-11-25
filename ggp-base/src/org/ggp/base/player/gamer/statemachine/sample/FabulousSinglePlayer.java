@@ -186,5 +186,10 @@ final class FabulousSinglePlayer extends SampleGamer {
 	public void setMachine(StateMachine m) {
 		
 	}
+
+	@Override
+	public int getConfidence() {
+		return 0;
+	}
 	
 }

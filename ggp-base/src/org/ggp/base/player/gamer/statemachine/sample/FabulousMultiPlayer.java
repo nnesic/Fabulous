@@ -439,4 +439,9 @@ final class FabulousMultiPlayer extends SampleGamer {
 		theMachine = m;
 	}
 
+	@Override
+	public int getConfidence() {
+		return 0;
+	}
+
 }

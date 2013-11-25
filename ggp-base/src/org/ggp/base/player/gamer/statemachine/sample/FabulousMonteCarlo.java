@@ -163,6 +163,11 @@ final class FabulousMonteCarlo extends SampleGamer {
 		started = true;
 	}
 	
+	@Override
+	public int getConfidence(){
+		return 0;
+	}
+	
 	/**
 	 * Performs Monte-Carlo tree search.
 	 * 

@@ -72,5 +72,11 @@ public final class FabulousPlayerEval extends SampleGamer {
 	public void setMachine(StateMachine m) {
 		// TODO: This is now part of every SampleGamer.
 	}
+
+	@Override
+	public int getConfidence() {
+		// TODO: Every SampleGamer needs to evaluate the quality of its results.
+		return 0;
+	}
 	
 }

@@ -132,6 +132,11 @@ final class FabulousMultiPlayer2 extends SampleGamer {
 		System.out.println("Playing random move.");
 		return theMachine.getRandomMove(currentState, role);
 	}
+	
+	@Override
+	public int getConfidence(){
+		return 0;
+	}
 
 	/**
 	 * Performs minimax search in a state.
@@ -547,5 +552,5 @@ final class FabulousMultiPlayer2 extends SampleGamer {
 		}
 		
 	}
-
+	
 }

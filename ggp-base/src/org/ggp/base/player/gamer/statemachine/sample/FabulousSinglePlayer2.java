@@ -93,6 +93,16 @@ final class FabulousSinglePlayer2 extends SampleGamer {
 		upperSearch(theMachine, theMachine.getInitialState(), timeout);
 	}
 	
+	@Override
+	public int getConfidence() {
+		if(best == null){
+			return 0;
+		}
+		else{
+			return 100;
+		}
+	}
+	
 	/**
 	 * Performs iterative deepening search.
 	 * 

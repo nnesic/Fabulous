@@ -78,7 +78,7 @@ public final class FabulousPlayer extends SampleGamer {
 		} catch (InterruptedException e) {
 			System.err.println("Thread interrupted.");
 		}
-		Move move = currentPlayer.getResult();
+		Move move = currentPlayer.getResult().move;
 		total = System.currentTimeMillis() - total;
 		System.out.println("Selected move in " + total + "ms.");
 		return move;
@@ -86,12 +86,19 @@ public final class FabulousPlayer extends SampleGamer {
 
 	@Override
 	public void setState(MachineState state) {
-		
+		System.err.println("You should not be calling this.");
 	}
 
 	@Override
 	public void setMachine(StateMachine m) {
+		System.err.println("You should not be calling this.");
 		theMachine = m;
+	}
+
+	@Override
+	public int getConfidence() {
+		System.err.println("You should not be calling this.");
+		return 0;
 	}
 	
 }
