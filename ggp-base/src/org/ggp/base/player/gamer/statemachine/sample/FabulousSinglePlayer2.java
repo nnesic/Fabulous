@@ -75,8 +75,7 @@ final class FabulousSinglePlayer2 extends SampleGamer {
 			//return getStateMachine().getRandomMove(getCurrentState(), getRole());
 		}
 		if(best == null || best.isEmpty()){
-			System.out.println("playing random");
-			return getStateMachine().getRandomMove(currentState, getRole());
+			return null;
 		}
 		return best.removeFirst();
 	}
@@ -95,7 +94,7 @@ final class FabulousSinglePlayer2 extends SampleGamer {
 	
 	@Override
 	public int getConfidence() {
-		if(best == null){
+		if(best == null || best.isEmpty()){
 			return 0;
 		}
 		else{

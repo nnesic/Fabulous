@@ -60,10 +60,10 @@ public class PlayerThread implements Runnable {
 	public void run(){
 		try {
 			if(metagame){
-				result = null;
+				result = new Result();
 				player.stateMachineMetaGame(timeout);
 			} else{
-				result = null;
+				result = new Result();
 				result = new Result(player.stateMachineSelectMove(timeout), 0);
 			} 
 		} catch (TransitionDefinitionException e) {
@@ -82,6 +82,13 @@ public class PlayerThread implements Runnable {
 	 */
 	public Result getResult(){
 		return result;
+	}
+	
+	/**
+	 * @return Player's class name
+	 */
+	public String getName(){
+		return player.getClass().getName();
 	}
 	
 }

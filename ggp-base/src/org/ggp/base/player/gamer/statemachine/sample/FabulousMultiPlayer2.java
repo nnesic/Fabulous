@@ -92,6 +92,8 @@ final class FabulousMultiPlayer2 extends SampleGamer {
 	
 	private Heuristics heuristic;
 	
+	private int confidence = 0;
+	
 	@Override
 	public void setMachine(StateMachine m) {
 		theMachine = m;
@@ -126,16 +128,12 @@ final class FabulousMultiPlayer2 extends SampleGamer {
 		prune = false;
 		useHeuristic = true;
 		Move move = minimax(currentState);
-		if(move != null){
-			return move;
-		}
-		System.out.println("Playing random move.");
-		return theMachine.getRandomMove(currentState, role);
+		return move;
 	}
 	
 	@Override
 	public int getConfidence(){
-		return 0;
+		return confidence;
 	}
 
 	/**
@@ -222,6 +220,12 @@ final class FabulousMultiPlayer2 extends SampleGamer {
 					}
 				}
 			}
+		if(notDone){
+			confidence = 0;
+		}
+		else{
+			confidence = 100;
+		}
 		if(bestScore != Integer.MIN_VALUE){
 			if(! useHeuristic){
 				heuristic.addValue(heuristic.evaluate_mobility(moves), heuristic.evaluate_novelty(state, seen), heuristic.evaluate_opponentMobility(minMoves), bestScore);

@@ -114,6 +114,8 @@ final class FabulousMonteCarlo extends SampleGamer {
 	
 	protected StateMachine theMachine;
 	
+	private int confidence = 0;
+	
 	@Override
 	public void setMachine(StateMachine m){
 		theMachine = m;
@@ -144,11 +146,7 @@ final class FabulousMonteCarlo extends SampleGamer {
 	public Move stateMachineSelectMove(long timeout) throws TransitionDefinitionException, MoveDefinitionException, GoalDefinitionException{
 		timeout -= 1000;
 		Move m = mcts(timeout);
-		if(m != null){
-			return m;
-		}
-		System.out.println("Playing random move.");
-		return theMachine.getRandomMove(currentState, theMachine.getRoles().get(role));
+		return m;
 	}
 	
 	@Override
@@ -195,11 +193,16 @@ final class FabulousMonteCarlo extends SampleGamer {
 		System.out.println("Did " + counter + " MCTS steps.");
 		int best = -1;
 		int bestScore = Integer.MIN_VALUE;
-		for(int i = 0; i < root.q_action[role].length; i++){
+		confidence = 0;
+		for(int i = 0; i < root.n_action[role].length; i++){
 			if(root.n_action[role][i] > bestScore){
 				bestScore = root.n_action[role][i];
 				best = i;
+				confidence = (int)(root.q_action[role][i] - uct(root.n, root.n_action[role][i]));
 			}
+		}
+		if(confidence < 0){
+			confidence = 0;
 		}
 		return (best == -1) ? null : root.legal.get(role).get(best);
 	}

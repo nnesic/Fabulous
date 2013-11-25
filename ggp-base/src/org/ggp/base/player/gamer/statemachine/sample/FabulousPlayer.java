@@ -1,5 +1,8 @@
 package org.ggp.base.player.gamer.statemachine.sample;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.ggp.base.util.statemachine.MachineState;
 import org.ggp.base.util.statemachine.Move;
 import org.ggp.base.util.statemachine.StateMachine;
@@ -25,7 +28,7 @@ public final class FabulousPlayer extends SampleGamer {
 	
 	//private final SampleGamer montecarlo = new FabulousMonteCarlo();
 	
-	private PlayerThread currentPlayer;
+	private List<PlayerThread> currentPlayers;
 	
 	private StateMachine theMachine;
 	
@@ -35,31 +38,38 @@ public final class FabulousPlayer extends SampleGamer {
 		System.out.println();
 		theMachine = getStateMachine();
 		int roles = theMachine.getRoles().size();
-		SampleGamer p;
+		currentPlayers = new ArrayList<PlayerThread>();
+		List<SampleGamer> players = new ArrayList<SampleGamer>();
 		if(roles == 1){
-			p = new FabulousSinglePlayer2();
+			players.add(new FabulousSinglePlayer2());
 		}
 		else{
-			if (theMachine.getRoleIndices().get(getRole()) == 0){
-				p = new FabulousMonteCarlo();
-			}
-			else{
-				p = new FabulousMonteCarlo();
-			}
+			players.add(new FabulousMultiPlayer2());
+			players.add(new FabulousMonteCarlo());
 		}
-		p.setMatch(getMatch());
-		p.setMachine(theMachine);
-		p.setRole(getRole());
-		currentPlayer = new PlayerThread(p);
-		currentPlayer.setState(theMachine.getInitialState());
-		currentPlayer.setMetaGame(true);
-		currentPlayer.setTimeout(timeout);
-		Thread t = new Thread(currentPlayer);
-		t.start();
-		try {
-			t.join();
-		} catch (InterruptedException e) {
-			System.err.println("Thread interrupted.");
+		for(SampleGamer p : players){
+			p.setMatch(getMatch());
+			p.setMachine(theMachine);
+			p.setRole(getRole());
+			PlayerThread pThread = new PlayerThread(p);
+			currentPlayers.add(pThread);
+		}
+		List<Thread> active = new ArrayList<Thread>();
+		for(PlayerThread p : currentPlayers){
+			p.setState(theMachine.getInitialState());
+			p.setMetaGame(true);
+			p.setTimeout(timeout);
+			Thread t = new Thread(p);
+			t.start();
+			active.add(t);
+		}
+		timeout -= 250;
+		try{
+			for(Thread t : active){
+				t.join(timeout - System.currentTimeMillis());
+			}
+		} catch(InterruptedException e){
+			System.err.println("Interrupted while waiter for player threads.");
 		}
 		total = System.currentTimeMillis() - total;
 		System.out.println("Completed metagaming in " + total + "ms.");
@@ -68,20 +78,44 @@ public final class FabulousPlayer extends SampleGamer {
 	@Override
 	public Move stateMachineSelectMove(long timeout) throws TransitionDefinitionException, MoveDefinitionException, GoalDefinitionException{
 		long total = System.currentTimeMillis();
-		currentPlayer.setState(getCurrentState());
-		currentPlayer.setMetaGame(false);
-		currentPlayer.setTimeout(timeout);
-		Thread t = new Thread(currentPlayer);
-		t.start();
-		try {
-			t.join();
-		} catch (InterruptedException e) {
-			System.err.println("Thread interrupted.");
+		List<Thread> active = new ArrayList<Thread>();
+		for(PlayerThread p : currentPlayers){
+			p.setState(getCurrentState());
+			p.setMetaGame(false);
+			p.setTimeout(timeout);
+			Thread t = new Thread(p);
+			t.start();
+			active.add(t);
 		}
-		Move move = currentPlayer.getResult().move;
+		timeout -= 250;
+		try{
+			for(Thread t : active){
+				t.join(timeout - System.currentTimeMillis());
+			}
+		} catch(InterruptedException e){
+			System.err.println("Interrupted while waiter for player threads.");
+		}
+		Move best = null;
+		int confidence = -1;
+		PlayerThread winner = null;
+		for(PlayerThread p : currentPlayers){
+			Result r = p.getResult();
+			if(r.confidence > confidence){
+				confidence = r.confidence;
+				best = r.move;
+				winner = p;
+			}
+		}
+		if(winner == null){
+			System.out.println("Player random move.");
+			best = theMachine.getRandomMove(getCurrentState(), getRole());
+		}
+		else{
+			System.out.println("Decision by " + winner.getName() + ".");
+		}
 		total = System.currentTimeMillis() - total;
 		System.out.println("Selected move in " + total + "ms.");
-		return move;
+		return best;
 	}
 
 	@Override
