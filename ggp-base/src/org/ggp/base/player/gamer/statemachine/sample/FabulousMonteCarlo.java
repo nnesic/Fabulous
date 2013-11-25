@@ -190,7 +190,7 @@ final class FabulousMonteCarlo extends SampleGamer {
 		System.out.println("Did " + counter + " MCTS steps.");
 		int best = -1;
 		int bestScore = Integer.MIN_VALUE;
-		for(int i = 0; i < root.n_action[role].length; i++){
+		for(int i = 0; i < root.q_action[role].length; i++){
 			if(root.n_action[role][i] > bestScore){
 				bestScore = root.n_action[role][i];
 				best = i;
@@ -283,7 +283,6 @@ final class FabulousMonteCarlo extends SampleGamer {
 		}
 		
 		if(scores == null){
-			System.err.println("Scores are null (and should not be).");
 			return -1;
 		}
 		
