@@ -65,7 +65,12 @@ public final class FabulousPlayerEval extends SampleGamer {
 
 	@Override
 	public void setState(MachineState state) {
-		// TODO: This is now part of every SampleGamer
+		// TODO: This is now part of every SampleGamer.
+	}
+
+	@Override
+	public void setMachine(StateMachine m) {
+		// TODO: This is now part of every SampleGamer.
 	}
 	
 }

@@ -5,6 +5,7 @@ import org.ggp.base.apps.player.detail.EmptyDetailPanel;
 import org.ggp.base.util.gdl.grammar.GdlPool;
 import org.ggp.base.util.statemachine.MachineState;
 import org.ggp.base.util.statemachine.Move;
+import org.ggp.base.util.statemachine.StateMachine;
 import org.ggp.base.util.statemachine.exceptions.GoalDefinitionException;
 import org.ggp.base.util.statemachine.exceptions.MoveDefinitionException;
 import org.ggp.base.util.statemachine.exceptions.TransitionDefinitionException;
@@ -28,6 +29,11 @@ public final class SampleNoopGamer extends SampleGamer
 
 	@Override
 	public void setState(MachineState state) {
+		
+	}
+
+	@Override
+	public void setMachine(StateMachine m) {
 		
 	}
 }

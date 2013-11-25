@@ -434,4 +434,9 @@ final class FabulousMultiPlayer extends SampleGamer {
 		return ret;
 	}
 
+	@Override
+	public void setMachine(StateMachine m) {
+		theMachine = m;
+	}
+
 }

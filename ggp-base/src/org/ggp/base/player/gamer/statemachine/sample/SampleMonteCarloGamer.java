@@ -91,4 +91,8 @@ public final class SampleMonteCarloGamer extends SampleGamer
 	public void setState(MachineState state) {
 		
 	}
+	@Override
+	public void setMachine(StateMachine m) {
+		
+	}
 }

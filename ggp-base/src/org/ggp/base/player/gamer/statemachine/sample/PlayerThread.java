@@ -6,35 +6,57 @@ import org.ggp.base.util.statemachine.exceptions.GoalDefinitionException;
 import org.ggp.base.util.statemachine.exceptions.MoveDefinitionException;
 import org.ggp.base.util.statemachine.exceptions.TransitionDefinitionException;
 
-public class PlayerThread extends Thread {
-
+/**
+ * Encapsulates a player for running in a thread.
+ * 
+ * @author Irme, Nicolai
+ *
+ */
+public class PlayerThread implements Runnable {
+	
 	private SampleGamer player;
-
+	
 	private boolean metagame;
+	
 	private long timeout;
-
+	
 	private Move result = null;
-
+	
+	/**
+	 * @param s Instantiated Player
+	 */
 	public PlayerThread(SampleGamer s){
 		player = s;
-
-
 	}
 	
+	/**
+	 * Pass the current game state.
+	 * 
+	 * @param s MachineState
+	 */
 	public void setState(MachineState s){
 		player.setState(s);
 	}
 	
+	/**
+	 * Select whether to run stateMachineMetagame or stateMachineSelectMove in the player class.
+	 * 
+	 * @param m True for metagame, false for play phase
+	 */
 	public void setMetaGame(boolean m){
 		metagame = m;
 
 	}
-
+	
+	/**
+	 * Set up the time limit for the next action.
+	 * 
+	 * @param t Time limit
+	 */
 	public void setTimeout(long t){
 		timeout = t;
-
 	}
-
+	
 	@Override
 	public void run(){
 		try {
@@ -54,10 +76,13 @@ public class PlayerThread extends Thread {
 		}
 	}
 	
+	/**
+	 * Retrieve the result of the last stateMachineSelectMove call.
+	 * 
+	 * @return Move
+	 */
 	public Move getResult(){
 		return result;
 	}
 	
-
-
 }

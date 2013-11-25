@@ -20,12 +20,7 @@ import org.ggp.base.util.statemachine.implementation.prover.ProverStateMachine;
 public abstract class SampleGamer extends StateMachineGamer
 {
 	
-	protected StateMachine theMachine;
-	
-	public void setMachine(StateMachine m){
-		theMachine = m;
-		
-	}
+	public abstract void setMachine(StateMachine m);
 	
 	/**
 	 * Sets the current state.

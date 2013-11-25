@@ -181,5 +181,10 @@ final class FabulousSinglePlayer extends SampleGamer {
 		seen.put(state, depth);
 		return false;
 	}
+
+	@Override
+	public void setMachine(StateMachine m) {
+		
+	}
 	
 }

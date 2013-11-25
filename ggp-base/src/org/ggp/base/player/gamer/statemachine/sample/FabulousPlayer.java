@@ -2,6 +2,7 @@ package org.ggp.base.player.gamer.statemachine.sample;
 
 import org.ggp.base.util.statemachine.MachineState;
 import org.ggp.base.util.statemachine.Move;
+import org.ggp.base.util.statemachine.StateMachine;
 import org.ggp.base.util.statemachine.exceptions.GoalDefinitionException;
 import org.ggp.base.util.statemachine.exceptions.MoveDefinitionException;
 import org.ggp.base.util.statemachine.exceptions.TransitionDefinitionException;
@@ -25,6 +26,8 @@ public final class FabulousPlayer extends SampleGamer {
 	private final SampleGamer montecarlo = new FabulousMonteCarlo();
 	
 	private PlayerThread currentPlayer;
+	
+	private StateMachine theMachine;
 	
 	@Override
 	public void stateMachineMetaGame(long timeout){
@@ -51,9 +54,10 @@ public final class FabulousPlayer extends SampleGamer {
 		currentPlayer.setState(theMachine.getInitialState());
 		currentPlayer.setMetaGame(true);
 		currentPlayer.setTimeout(timeout);
-		currentPlayer.start();
+		Thread t = new Thread(currentPlayer);
+		t.start();
 		try {
-			currentPlayer.join();
+			t.join();
 		} catch (InterruptedException e) {
 			System.err.println("Thread interrupted.");
 		}
@@ -67,9 +71,10 @@ public final class FabulousPlayer extends SampleGamer {
 		currentPlayer.setState(getCurrentState());
 		currentPlayer.setMetaGame(false);
 		currentPlayer.setTimeout(timeout);
-		currentPlayer.start();
+		Thread t = new Thread(currentPlayer);
+		t.start();
 		try {
-			currentPlayer.join();
+			t.join();
 		} catch (InterruptedException e) {
 			System.err.println("Thread interrupted.");
 		}
@@ -82,6 +87,11 @@ public final class FabulousPlayer extends SampleGamer {
 	@Override
 	public void setState(MachineState state) {
 		
+	}
+
+	@Override
+	public void setMachine(StateMachine m) {
+		theMachine = m;
 	}
 	
 }

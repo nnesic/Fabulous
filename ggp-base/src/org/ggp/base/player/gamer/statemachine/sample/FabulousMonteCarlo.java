@@ -112,6 +112,13 @@ final class FabulousMonteCarlo extends SampleGamer {
 	
 	private int counter;
 	
+	protected StateMachine theMachine;
+	
+	@Override
+	public void setMachine(StateMachine m){
+		theMachine = m;
+	}
+	
 	@Override
 	public void setState(MachineState state){
 		currentState = state;

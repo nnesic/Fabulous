@@ -5,6 +5,7 @@ import java.util.List;
 import org.ggp.base.player.gamer.event.GamerSelectedMoveEvent;
 import org.ggp.base.util.statemachine.MachineState;
 import org.ggp.base.util.statemachine.Move;
+import org.ggp.base.util.statemachine.StateMachine;
 import org.ggp.base.util.statemachine.exceptions.GoalDefinitionException;
 import org.ggp.base.util.statemachine.exceptions.MoveDefinitionException;
 import org.ggp.base.util.statemachine.exceptions.TransitionDefinitionException;
@@ -31,6 +32,11 @@ public final class SampleLegalGamer extends SampleGamer
 
 	@Override
 	public void setState(MachineState state) {
+		
+	}
+
+	@Override
+	public void setMachine(StateMachine m) {
 		
 	}
 }
