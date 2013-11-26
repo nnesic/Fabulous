@@ -128,6 +128,9 @@ final class FabulousMonteCarlo extends SampleGamer {
 			return;
 		}
 		if(root != null){
+			if(root.state.equals(currentState)){
+				return;
+			}
 			for(Node n : root.successors.values()){
 				if(n instanceof TerminalNode){
 					continue;
