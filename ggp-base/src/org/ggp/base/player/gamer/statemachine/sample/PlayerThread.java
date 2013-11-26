@@ -66,6 +66,7 @@ public class PlayerThread implements Runnable {
 			} else{
 				result = new Result();
 				Move m = player.stateMachineSelectMove(timeout);
+				//System.out.println(player.getClass().getName() + ": Confidence " + player.getConfidence());
 				result = new Result(m, player.getConfidence());
 			} 
 		} catch (TransitionDefinitionException e) {
