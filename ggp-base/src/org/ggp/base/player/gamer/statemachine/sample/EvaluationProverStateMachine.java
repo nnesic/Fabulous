@@ -1,5 +1,6 @@
 package org.ggp.base.player.gamer.statemachine.sample;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -26,7 +27,7 @@ import org.ggp.base.util.statemachine.implementation.prover.result.ProverResultP
 public class EvaluationProverStateMachine extends StateMachine
 {
 	private MachineState initialState;
-	private Prover prover;
+	private EvaluationProver prover;
 	private List<Role> roles;
 
 	/**
@@ -36,6 +37,15 @@ public class EvaluationProverStateMachine extends StateMachine
 	{
 		
 	}
+	
+	public void reorder (ArrayList <MachineState> trainStates, StateMachine machine){
+		prover.reorder(trainStates, machine);
+	}
+	
+	public boolean checkCorrect (ArrayList <MachineState> machineStates, StateMachine machine){
+		return prover.checkCorrect(machineStates, machine);
+	}
+	
 	
 	public void initialize(List<Gdl> description)
 	{

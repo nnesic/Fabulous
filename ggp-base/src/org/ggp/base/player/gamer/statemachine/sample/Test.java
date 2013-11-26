@@ -6,6 +6,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
+import org.ggp.base.util.game.CloudGameRepository;
+import org.ggp.base.util.game.Game;
 import org.ggp.base.util.gdl.factory.GdlFactory;
 import org.ggp.base.util.gdl.factory.exceptions.GdlFormatException;
 import org.ggp.base.util.gdl.grammar.Gdl;
@@ -135,76 +137,53 @@ public class Test {
 		
 		//List <Gdl> game = t.createTicTacToe();
 		//List <Gdl> game = t.createConnect3();
-		List <Gdl> game = t.createAsteroids();
+		//List <Gdl> game = t.createAsteroids();
+		CloudGameRepository repo = new CloudGameRepository("games.ggp.org/dresden");
+		//Game ga = repo.getGame("breakthrough");
+		Game ga = repo.getGame("connect4");
+		//Game ga = repo.getGame("tictactoe");
+		List <Gdl> game = ga.getRules();
 		t.machine.initialize(game);
+		System.out.println("got game");
 		//t.machine.initialize(t.createTicTacToe());
 
 		Set <GdlSentence> s = ProverQueryBuilder.getContext(t.machine.getInitialState());
 		System.out.println(s.toString());
 		System.out.println((t.machine.getRandomNextState(t.machine.getInitialState()).toString()));
 		EvaluationProver p = new EvaluationProver(new HashSet<Gdl>(game));
-		ArrayList<MachineState> randomStates = t.generateRandomStates(10);
+		ArrayList<MachineState> randomStates = t.generateRandomStates(20);
+		
+		
 		//p.setTrainStates(randomStates);
 
 		//p.evaluate(randomStates, t.machine);
 		ArrayList<MachineState> randomStates2 = t.generateRandomStates(10);
 		//p.results(randomStates2, t.machine);
+		System.out.println("starting reordering");
 		p.reorder(randomStates, t.machine);
+		System.out.println("done reordering");
 		for (Gdl g : p.reorderedGameDescription ){
 			System.out.println(g);
 		}
 		
 		System.out.println();
-		for (GdlRule r : p.scores.keySet()){
-			System.out.println(r.toString() + " " + p.scores.get(r));
+		
+		for (Gdl g : p.gameDescription ){
+			System.out.println(g);
 		}
-
-		p.results(randomStates2, t.machine);
-
-		/*for (MachineState m : randomStates){
-			System.out.println(m.toString());
-		}*/
-
-
-
-
-		/*	for (GdlSentence g :p.stats.keySet()){
-
-			System.out.println(g.toString() + "       " + p.getLitCount(g) + " " + p.getLitSize(g) + " " + p.getLitSuccess(g) + " " + p.getLitInstances(g) );
-		}
-		try {
-			System.out.println("\n\n\n");
-			t.machine.getRandomJointMove(t.machine.getInitialState());
-
-		} catch (MoveDefinitionException e) {
-			e.printStackTrace();
-		}*/
-		System.out.println("\n\n\n");
-
-		/*for (MachineState state : randomStates){
-			System.out.println(state.toString());
-		}*/
-		/*s = ProverQueryBuilder.getContext(t.machine.getRandomNextState(randomStates.get(4)), t.machine.getRoles(), t.machine.getRandomJointMove(randomStates.get(4)));
-		System.out.println(s.toString());
-		Set <GdlSentence> a = p.askAll((GdlSentence)GdlFactory.create("(next ?x)"), s);*/
-		//Set <GdlSentence> a = p.askAll(ProverQueryBuilder.getTerminalQuery(), s);
-		//System.out.println(p.count);
-		/*	for (GdlSentence sen : a)
-			System.out.println(sen.toString());*/
-
-		//Set <Gdl> thingy = p.order(0);
-		/*for (Gdl g : thingy){
-			System.out.println(g.toString());
-		}*/
-		/*ArrayList<MachineState> randomStates2 = t.generateRandomStates(20);
-		p.results(randomStates2, t.machine);
-
-		System.out.println("\n\n\n");
-		/*for (MachineState m : randomStates)
-			System.out.println(m.toString());
+		
+		
 		System.out.println();
-		for (MachineState m : randomStates2)
-			System.out.println(m.toString());*/
+		for (GdlRule r : p.scores.keySet()){
+			//System.out.println(r.toString() + " " + p.scores.get(r));
+		}
+
+		p.results(randomStates2, t.machine);
+
+		System.out.println(p.checkCorrect(randomStates2, t.machine));
+		System.out.println("\n\n\n");
+
+		
 		System.out.println("done");
 
 
