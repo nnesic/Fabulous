@@ -9,6 +9,8 @@ import java.util.Set;
 
 import javax.management.relation.Role;
 
+import org.ggp.base.util.game.CloudGameRepository;
+import org.ggp.base.util.game.Game;
 import org.ggp.base.util.gdl.factory.GdlFactory;
 import org.ggp.base.util.gdl.factory.exceptions.GdlFormatException;
 import org.ggp.base.util.gdl.grammar.Gdl;
@@ -20,6 +22,7 @@ import org.ggp.base.util.gdl.grammar.GdlOr;
 import org.ggp.base.util.gdl.grammar.GdlPool;
 import org.ggp.base.util.gdl.grammar.GdlRule;
 import org.ggp.base.util.gdl.grammar.GdlSentence;
+import org.ggp.base.util.gdl.grammar.GdlTerm;
 import org.ggp.base.util.prover.Prover;
 import org.ggp.base.util.prover.aima.cache.ProverCache;
 import org.ggp.base.util.prover.aima.knowledge.KnowledgeBase;
@@ -28,6 +31,7 @@ import org.ggp.base.util.prover.aima.substituter.Substituter;
 import org.ggp.base.util.prover.aima.substitution.Substitution;
 import org.ggp.base.util.prover.aima.unifier.Unifier;
 import org.ggp.base.util.statemachine.MachineState;
+import org.ggp.base.util.statemachine.Move;
 import org.ggp.base.util.statemachine.StateMachine;
 import org.ggp.base.util.statemachine.exceptions.MoveDefinitionException;
 import org.ggp.base.util.statemachine.implementation.prover.query.ProverQueryBuilder;
@@ -60,192 +64,194 @@ public final class EvaluationProver extends Prover
 
 	private KnowledgeBase knowledgeBase;
 	public int count = 0;
+	boolean tooLong = false;
+	int controlCount = Integer.MAX_VALUE;
 
 	public HashMap < GdlSentence, Tuple > stats;
 
-	public ArrayList<MachineState> trainStates;
-	private boolean evaluate = false;
+	public HashMap<GdlRule, GdlRule> oldToNew;
+	public HashMap<GdlRule, GdlRule> newToOld;
+
 	public KnowledgeBase reorderedKnowledgeBase;
+	public KnowledgeBase originalKnowledgeBase;
 	public Set <Gdl> gameDescription;
+	public Set <Gdl> reorderedGameDescription;
+
+	int [] origScores;
+
+	public HashMap <GdlRule, Integer> scores;
+
 
 	public EvaluationProver(Set<Gdl> description)
+
 	{
 		gameDescription = description;
 		knowledgeBase = new KnowledgeBase(description);
 		stats = new HashMap<GdlSentence, Tuple >();
-		for (Gdl rule : description){
-			if (rule instanceof GdlRule){	
-
-				GdlRule r = (GdlRule) rule;
-				//stats.put(r.getHead().getName(), new HashMap<GdlLiteral, Tuple>());
-				List <GdlLiteral> body = r.getBody();
-				for (GdlLiteral l : body){
-					if (!stats.containsKey(l) && !(l instanceof GdlNot) && !(l instanceof GdlDistinct) && !(l instanceof GdlOr) ){
-						stats.put((GdlSentence)l, new Tuple(0, 0, 0));
-					}
-				}
-
-			}
-		}
-	}
-
-	public int getLitCount (GdlSentence s){
-		return stats.get(s).count;
-	}
-
-	public int getLitSuccess (GdlSentence s){
-		return stats.get(s).succeeded;
-	}
-
-	public int getLitSize (GdlSentence s){
-		return stats.get(s).size;
-	}
-
-	public HashMap<GdlSentence, Integer> getLitInstances (GdlSentence s){
-		return stats.get(s).instances;
-	}
-
-	public void setTrainStates (ArrayList<MachineState> s){
-		trainStates = s;
-	}
-
-
-
-	public void evaluate (ArrayList <MachineState> m, StateMachine machine){
-		trainStates = m;
-		evaluate = true;
-
-		for (GdlLiteral l : stats.keySet()){
-			for (MachineState state : trainStates){
-				Set<GdlSentence> result = null;
-				try {
-					result = askAll((GdlSentence)l, ProverQueryBuilder.getContext(state, machine.getRoles(), machine.getRandomJointMove(state)));
-				} catch (MoveDefinitionException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-				Tuple temp = stats.get(l);
-				temp.count ++;
-				if (result.size() != 0){
-					temp.succeeded ++;
-					for (GdlSentence sen : result){
-						if (!temp.instances.containsKey(sen)){
-							temp.instances.put(sen, 0);
-						}
-						temp.instances.put(sen, temp.instances.get(sen)+1);
-					}
-				}
-				temp.size += count;
-				stats.put((GdlSentence) l, temp);
-			}
-		}
+		newToOld = new HashMap<GdlRule, GdlRule> ();
+		oldToNew = new HashMap<GdlRule, GdlRule> ();
+		reorderedKnowledgeBase = new KnowledgeBase(gameDescription);
+		originalKnowledgeBase = new KnowledgeBase(description);
+		reorderedGameDescription = new HashSet <Gdl> ();
+		reorderedGameDescription.addAll(description);
+		scores = new HashMap<GdlRule, Integer>();
 
 	}
 
-	public void calculateProbs (){
-		for (GdlSentence s : stats.keySet()){
-			Tuple temp = stats.get(s);
-			temp.setAvgProb();
-			stats.put(s, temp);
-		}
-	}
 
-	public Set <Gdl> order(int mode){
-		calculateProbs();
-		Set <Gdl> newSet = new HashSet<Gdl>(); 
+	public void reorder (ArrayList <MachineState> trainStates, StateMachine machine){
 
-		for (Gdl rule : gameDescription){
-			if (rule instanceof GdlRule){	
-				int start = 0, end = 0;
-				GdlRule r = (GdlRule) rule;
-				List<GdlLiteral> body = r.getBody();
-				ArrayList <GdlLiteral> newBody = new ArrayList<GdlLiteral>();
-				ArrayList <GdlLiteral> temp = new ArrayList<GdlLiteral>();
+		ArrayList <List <Move>> moves = new ArrayList<List<Move>>();
 
-				for (int i = 0; i < body.size(); i++){
-					if (! (body.get(i) instanceof GdlSentence)){
-						end = i;
-						if (start != end){
-							/*	for (int j = start; j<end; j++){
-								temp.add(body.get(j));
-							}*/
-							
-								ArrayList<GdlLiteral> sorted = probHelper(start, end, temp);
-								
-								if (mode == 1){
-									sorted = sizeHelper(start, end, temp);
-								}
-								if (mode == 2){
-									sorted = smartHelper(start, end, temp);
-								}
-							
-							for (int j = 0; j < sorted.size(); j++){
-								newBody.add(sorted.get(j));
+		//calculate query length to test the old rule over all states
+		for (Gdl item : gameDescription){
+
+			if(item instanceof GdlRule){
+				GdlRule rule = (GdlRule) item;
+				//here do the re-ordering ot literals in the tail
+
+				//dakle, prvi re-arrangement je onaj pravi. 
+				reorderedGameDescription.remove(rule);
+				GdlRule bestRuleVersion = rule;
+
+				List tail = rule.getBody();
+
+
+
+
+				ArrayList <GdlRule> rulesToTry = rearrangeRuleComplete(bestRuleVersion);
+
+				;
+
+				Set origResults = null;
+				int currentBestScore = Integer.MAX_VALUE;
+				int bestReorderingIndex = 0;
+				for (int i = 0; i < rulesToTry.size(); i++){
+					controlCount = Integer.MAX_VALUE;
+					
+					GdlRule currentRule = rulesToTry.get(i);	
+					int countOld = 0;
+					int countNew = 0;
+					
+					reorderedGameDescription.add(currentRule);
+
+					knowledgeBase = new KnowledgeBase(reorderedGameDescription);
+					origScores = new int [trainStates.size()];
+					tooLong = false;
+
+					for (int machineIndex = 0; machineIndex<trainStates.size(); machineIndex++){
+						MachineState m = trainStates.get(machineIndex);
+						GdlSentence head = rule.getHead();
+
+						try {
+							List <Move> doThis = machine.getRandomJointMove(m);
+							if ( i ==0) {
+								moves.add(machineIndex,  machine.getRandomJointMove(m));
+								origResults = askAll(head, ProverQueryBuilder.getContext(m, machine.getRoles(), doThis ));
+								origScores [machineIndex] = count;
+								controlCount = 10000 ;
+								countNew += count;
 							}
+
+							else{
+								controlCount = 10000 + origScores [machineIndex] ;
+								count = 0;
+								Set reorderedResults = askAll(head, ProverQueryBuilder.getContext(m, machine.getRoles(), doThis));
+								if ( tooLong){
+									//if the original rule and the rearranged rule dont give same result discard this 
+									//rearrangement and try anoter one	
+									//another reacon to break is if we hit an infinite loop somewhere so tooLong is true
+									//System.out.println("ORIG: " + origResults.toString());
+									//System.out.println("NEW: " + reorderedResults.toString());
+									tooLong = true; //using this as a general 'woops something went wrong'
+
+
+									break;
+								}
+								else {
+									countNew +=count;
+								}
+							}
+						} catch (MoveDefinitionException e) {
+							e.printStackTrace();
 						}
-						newBody.add(body.get(i));
-						start = end +1;
-						temp.clear();
 					}
-					else {
-						temp.add(body.get(i));
+
+					if (tooLong)
+						scores.put(currentRule, -1);
+					else 
+						scores.put(currentRule, countNew);
+
+					if (!(tooLong)){
+						//if ( (countNew < countOld)){
+
+						if (countNew < currentBestScore){
+
+							//bestRuleVersion = currentRule;
+							 bestReorderingIndex = i;
+							currentBestScore = countNew;
+						}
+
+						//	}
+
+
 					}
+					reorderedGameDescription.remove(currentRule);
 				}
-				if (end == 0){
-					end = body.size();
-					ArrayList<GdlLiteral> sorted = probHelper(start, end, temp);
-					
-					if (mode == 2){
-						sorted = smartHelper(start, end, temp);
-					}
-					
-					if (mode == 1){
-						sorted = sizeHelper(start, end, temp);
-					}
-					
-					for (int j = 0; j < sorted.size(); j++){
-						newBody.add(sorted.get(j));
-					}
-				}
-				newSet.add(GdlPool.getRule(r.getHead(), newBody));
-				
-				
-				for (Gdl g : gameDescription){
-					if (! (g instanceof GdlRule)){
-						newSet.add(g);
-					}
-					
-				}
+				reorderedGameDescription.add(rulesToTry.get(bestReorderingIndex));
+
 			}
-
-
-
-			//newSet.add(null);
+			controlCount = Integer.MAX_VALUE;
 		}
-
-		return newSet;
 	}
 
-	private ArrayList<GdlLiteral > probHelper (int start, int end, ArrayList <GdlLiteral> toSort){
-
-		ArrayList<GdlLiteral> ret = new ArrayList<GdlLiteral>();
 
 
-		while (toSort.size() >0){
-			double min = 100;
-			int minIndex = 0;
-			for (int i = 0; i < toSort.size(); i++){
-				if (stats.get((GdlSentence)toSort.get(i)).avgProb <min){
-					min = stats.get((GdlSentence)toSort.get(i)).avgProb;
-					minIndex = i;
-				}
+
+	public ArrayList <GdlRule> rearrangeRuleComplete (GdlRule rule){
+		ArrayList<GdlRule> ret = new ArrayList<GdlRule>();
+		List <GdlLiteral> tail = rule.getBody();
+		ret.add(rule);
+		for (int i = 0; i < tail.size(); i++){
+			ArrayList <GdlRule> temp = new ArrayList<GdlRule>();
+			for (GdlRule r : ret){
+				temp.addAll(rearrangeRule(r, i));
 			}
-			ret.add(toSort.get(minIndex));
-			toSort.remove(minIndex);
+			ret.addAll(temp);
+
 		}
 		return ret;
 	}
-	
+	public ArrayList <GdlRule> rearrangeRule(GdlRule rule, int index){
+		ArrayList<GdlRule> ret = new ArrayList<GdlRule>();
+		List <GdlLiteral> tail = rule.getBody();
+		GdlLiteral old = tail.get(index);
+		for (int i = index+1; i<tail.size(); i++){
+			ArrayList<GdlLiteral> newTail = new ArrayList<GdlLiteral> ();
+			newTail.addAll(tail);
+			newTail.set(index, tail.get(i));
+			newTail.set(i, old);
+			ret.add(GdlPool.getRule(rule.getHead(), newTail));
+		}
+		return ret;
+	}
+
+
+
+	public static void main(String[] args) throws GdlFormatException, SymbolFormatException {
+
+		CloudGameRepository repo = new CloudGameRepository("games.ggp.org/dresden");
+		Game g = repo.getGame("tictactoe");
+		List <Gdl> origRules = g.getRules();
+		Set <Gdl> rules = new HashSet<Gdl>();
+		rules.addAll(origRules);
+		EvaluationProver prover = new EvaluationProver(rules);
+		ArrayList <GdlRule> res = prover.rearrangeRuleComplete((GdlRule)GdlFactory.create("(<= (row ?x)(sequential ?a ?b ?c ?d)(true (cell ?a ?r ?x))(true (cell ?b ?r ?x)))"));
+		for (GdlRule r : res)
+			System.out.println(r.toString());
+	}
+	//	newSet.add(GdlPool.getRule(r.getHead(), newBody));
+
 
 	private ArrayList<GdlLiteral > sizeHelper (int start, int end, ArrayList <GdlLiteral> toSort){
 
@@ -267,32 +273,14 @@ public final class EvaluationProver extends Prover
 		return ret;
 	}
 
-	
-	private ArrayList<GdlLiteral > smartHelper (int start, int end, ArrayList <GdlLiteral> toSort){
-
-		ArrayList<GdlLiteral> ret = new ArrayList<GdlLiteral>();
 
 
-		while (toSort.size() >0){
-			double min = stats.get((GdlSentence)toSort.get(0)).size;
-			int minIndex = 0;
-			for (int i = 0; i < toSort.size(); i++){
-				if (stats.get((GdlSentence)toSort.get(i)).size * stats.get((GdlSentence)toSort.get(i)).avgProb <min){
-					min = stats.get((GdlSentence)toSort.get(i)).size * stats.get((GdlSentence)toSort.get(i)).avgProb;
-					minIndex = i;
-				}
-			}
-			ret.add(toSort.get(minIndex));
-			toSort.remove(minIndex);
-		}
-		return ret;
-	}
-	
-	
+
 
 
 	public void results (ArrayList <MachineState> m, StateMachine machine){
 		System.out.println("RUNNING ORIGINAL RULE SET");
+		knowledgeBase = new KnowledgeBase(gameDescription);
 		int stepsLegal = 0;
 		int stepsNext = 0;
 		int stepsTerminal =0;
@@ -307,8 +295,8 @@ public final class EvaluationProver extends Prover
 				stepsGoal += count;
 				askAll(ProverQueryBuilder.getTerminalQuery(), ProverQueryBuilder.getContext(state, machine.getRoles(), machine.getRandomJointMove(state)));
 				stepsTerminal += count;
-				
-				
+
+
 			} catch (GdlFormatException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -324,12 +312,12 @@ public final class EvaluationProver extends Prover
 		System.out.println("Average tree size for next: " + stepsNext/m.size() );
 		System.out.println("Average tree size for goal: " + stepsGoal/m.size() );
 		System.out.println("Average tree size for terminal: " + stepsTerminal/m.size() );
-		
-		knowledgeBase = new KnowledgeBase(order(0));
-		 stepsLegal = 0;
-		 stepsNext = 0;
-		 stepsTerminal =0;
-		 stepsGoal =0;
+
+		knowledgeBase = new KnowledgeBase(reorderedGameDescription);
+		stepsLegal = 0;
+		stepsNext = 0;
+		stepsTerminal =0;
+		stepsGoal =0;
 		for (MachineState state : m){
 			try {
 				askAll((GdlSentence)GdlFactory.create("(legal ?p ?x)"), ProverQueryBuilder.getContext(state, machine.getRoles(), machine.getRandomJointMove(state)));
@@ -340,7 +328,7 @@ public final class EvaluationProver extends Prover
 				stepsGoal += count;
 				askAll(ProverQueryBuilder.getTerminalQuery(), ProverQueryBuilder.getContext(state, machine.getRoles(), machine.getRandomJointMove(state)));
 				stepsTerminal += count;
-				
+
 			} catch (GdlFormatException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -352,58 +340,14 @@ public final class EvaluationProver extends Prover
 				e.printStackTrace();
 			}
 		}
-		
+
 		System.out.println("RUNNING PROB RULE SET");
 		System.out.println("Average tree size for legal: " + stepsLegal/m.size() );
 		System.out.println("Average tree size for next: " + stepsNext/m.size() );
 		System.out.println("Average tree size for goal: " + stepsGoal/m.size() );
 		System.out.println("Average tree size for terminal: " + stepsTerminal/m.size() );
-		
-		knowledgeBase = new KnowledgeBase(order(1));
-		 stepsLegal = 0;
-		 stepsNext = 0;
-		 stepsTerminal =0;
-		 stepsGoal =0;
-		for (MachineState state : m){
-			try {
-				askAll((GdlSentence)GdlFactory.create("(legal ?p ?x)"), ProverQueryBuilder.getContext(state, machine.getRoles(), machine.getRandomJointMove(state)));
-				stepsLegal += count;
-				askAll((GdlSentence)GdlFactory.create("(next ?x)"),  ProverQueryBuilder.getContext(state, machine.getRoles(), machine.getRandomJointMove(state)));
-				stepsNext += count;
-				askAll((GdlSentence)GdlFactory.create("(goal ?p ?x)"), ProverQueryBuilder.getContext(state, machine.getRoles(), machine.getRandomJointMove(state)));
-				stepsGoal += count;
-				askAll(ProverQueryBuilder.getTerminalQuery(), ProverQueryBuilder.getContext(state, machine.getRoles(), machine.getRandomJointMove(state)));
-				stepsTerminal += count;
-				
-				
-			} catch (GdlFormatException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} catch (SymbolFormatException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} catch (MoveDefinitionException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-		}
-		
-		System.out.println("RUNNING SIZE RULE SET");
-		System.out.println("Average tree size for legal: " + stepsLegal/m.size() );
-		System.out.println("Average tree size for next: " + stepsNext/m.size() );
-		System.out.println("Average tree size for goal: " + stepsGoal/m.size() );
-		System.out.println("Average tree size for terminal: " + stepsTerminal/m.size() );
-		try {
-			System.out.println(knowledgeBase.fetch((GdlSentence)GdlFactory.create("(connfour ?x)")).toString());
-			System.out.println(knowledgeBase.fetch((GdlSentence)GdlFactory.create("(goal ?p ?x)")).toString());
-			System.out.println(knowledgeBase.fetch((GdlSentence)GdlFactory.create("(diag1 ?x)")).toString());
-		} catch (GdlFormatException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (SymbolFormatException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+
+
 	}
 
 
@@ -419,6 +363,9 @@ public final class EvaluationProver extends Prover
 
 	private Set<GdlSentence> ask(GdlSentence query, Set<GdlSentence> context, boolean askOne)
 	{
+		if (tooLong)
+			return null;
+
 		LinkedList<GdlLiteral> goals = new LinkedList<GdlLiteral>();
 		goals.add(query);
 
@@ -438,6 +385,13 @@ public final class EvaluationProver extends Prover
 	private void ask(LinkedList<GdlLiteral> goals, KnowledgeBase context, Substitution theta, ProverCache cache, VariableRenamer renamer, boolean askOne, Set<Substitution> results, Set<GdlSentence> alreadyAsking)
 	{
 		count++;
+		if (count > controlCount){
+			tooLong = true;
+			//System.out.println("check control count: " + controlCount);
+			return;
+
+		}
+
 		if (goals.size() == 0)
 		{
 			results.add(theta);
@@ -477,12 +431,15 @@ public final class EvaluationProver extends Prover
 	public Set<GdlSentence> askAll(GdlSentence query, Set<GdlSentence> context)
 	{
 		count = 0;
+		tooLong = false;
 		return ask(query, context, false);
 
 	}
 
 	private void askDistinct(GdlDistinct distinct, LinkedList<GdlLiteral> goals, KnowledgeBase context, Substitution theta, ProverCache cache, VariableRenamer renamer, boolean askOne, Set<Substitution> results, Set<GdlSentence> alreadyAsking)
 	{
+		if (tooLong)
+			return;
 		if (!distinct.getArg1().equals(distinct.getArg2()))
 		{
 			ask(goals, context, theta, cache, renamer, askOne, results, alreadyAsking);
@@ -491,6 +448,8 @@ public final class EvaluationProver extends Prover
 
 	private void askNot(GdlNot not, LinkedList<GdlLiteral> goals, KnowledgeBase context, Substitution theta, ProverCache cache, VariableRenamer renamer, boolean askOne, Set<Substitution> results, Set<GdlSentence> alreadyAsking)
 	{
+		if (tooLong)
+			return;
 		LinkedList<GdlLiteral> notGoals = new LinkedList<GdlLiteral>();
 		notGoals.add(not.getBody());
 
@@ -506,12 +465,16 @@ public final class EvaluationProver extends Prover
 	@Override
 	public GdlSentence askOne(GdlSentence query, Set<GdlSentence> context)
 	{
+		if (tooLong)
+			return null;
 		Set<GdlSentence> results = ask(query, context, true);
 		return (results.size() > 0) ? results.iterator().next() : null;
 	}
 
 	private void askOr(GdlOr or, LinkedList<GdlLiteral> goals, KnowledgeBase context, Substitution theta, ProverCache cache, VariableRenamer renamer, boolean askOne, Set<Substitution> results, Set<GdlSentence> alreadyAsking)
 	{
+		if (tooLong)
+			return;
 		for (int i = 0; i < or.arity(); i++)
 		{
 			goals.addFirst(or.get(i));
@@ -527,6 +490,8 @@ public final class EvaluationProver extends Prover
 
 	private void askSentence(GdlSentence sentence, LinkedList<GdlLiteral> goals, KnowledgeBase context, Substitution theta, ProverCache cache, VariableRenamer renamer, boolean askOne, Set<Substitution> results, Set<GdlSentence> alreadyAsking)
 	{
+		if (tooLong)
+			return;
 		if (!cache.contains(sentence))
 		{
 			//Prevent infinite loops on certain recursive queries.

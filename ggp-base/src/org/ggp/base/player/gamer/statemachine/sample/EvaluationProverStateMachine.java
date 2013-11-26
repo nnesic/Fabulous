@@ -11,7 +11,7 @@ import org.ggp.base.util.gdl.grammar.GdlSentence;
 import org.ggp.base.util.logging.GamerLogger;
 import org.ggp.base.util.prover.Prover;
 //import org.ggp.base.util.prover.aima.AimaProver;
-import org.ggp.base.util.prover.aima.EvaluationProver;
+
 import org.ggp.base.util.statemachine.MachineState;
 import org.ggp.base.util.statemachine.Move;
 import org.ggp.base.util.statemachine.Role;

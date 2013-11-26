@@ -3,9 +3,11 @@ package org.ggp.base.player.gamer.statemachine.sample;
 import org.ggp.base.player.gamer.exception.MetaGamingException;
 import org.ggp.base.util.statemachine.Move;
 import org.ggp.base.util.statemachine.StateMachine;
+import org.ggp.base.util.statemachine.cache.CachedStateMachine;
 import org.ggp.base.util.statemachine.exceptions.GoalDefinitionException;
 import org.ggp.base.util.statemachine.exceptions.MoveDefinitionException;
 import org.ggp.base.util.statemachine.exceptions.TransitionDefinitionException;
+import org.ggp.base.util.statemachine.implementation.prover.ProverStateMachine;
 
 /**
  * The fabulous player.
@@ -13,7 +15,7 @@ import org.ggp.base.util.statemachine.exceptions.TransitionDefinitionException;
  * @author Nera, Nicolai, Irme
  *
  */
-public final class FabulousPlayerEval extends SampleGamer {
+public final class EvalFabulousPlayer extends SampleGamer {
 	
 	private final SampleGamer singlePlayer = new FabulousSinglePlayer2();
 	
@@ -52,6 +54,13 @@ public final class FabulousPlayerEval extends SampleGamer {
 		System.out.println("Completed metagaming in " + total + "ms.");
 	}
 	
+	@Override
+	public StateMachine getInitialStateMachine() {
+		System.out.println("returned eval state machine");
+		return new CachedStateMachine(new EvaluationProverStateMachine());
+		
+	}	
+
 	@Override
 	public Move stateMachineSelectMove(long timeout) throws TransitionDefinitionException, MoveDefinitionException, GoalDefinitionException{
 		long total = System.currentTimeMillis();

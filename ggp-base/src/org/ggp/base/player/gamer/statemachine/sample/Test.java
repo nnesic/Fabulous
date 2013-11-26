@@ -9,8 +9,9 @@ import java.util.Set;
 import org.ggp.base.util.gdl.factory.GdlFactory;
 import org.ggp.base.util.gdl.factory.exceptions.GdlFormatException;
 import org.ggp.base.util.gdl.grammar.Gdl;
+import org.ggp.base.util.gdl.grammar.GdlRule;
 import org.ggp.base.util.gdl.grammar.GdlSentence;
-import org.ggp.base.util.prover.aima.EvaluationProver;
+//import org.ggp.base.util.prover.aima.EvaluationProver;
 import org.ggp.base.util.statemachine.MachineState;
 import org.ggp.base.util.statemachine.exceptions.MoveDefinitionException;
 import org.ggp.base.util.statemachine.exceptions.TransitionDefinitionException;
@@ -46,7 +47,7 @@ public class Test {
 			description.add(GdlFactory.create("(<= (next (control ?p2))(true (control ?p1))(next_player ?p1 ?p2))"));
 			description.add(GdlFactory.create("(<= terminal(true (heap a 0))(true (heap b 0))(true (heap c 0))(true (heap d 0)))"));
 			description.add(GdlFactory.create("(<= (goal ?p 0)(true (control ?p)))"));
-			description.add(GdlFactory.create("(<= (goal ?p 100)(true (control ?p1))(next_player ?p ?p1))"));
+			description.add(GdlFactory.create("(<= (goal ?p 100)(next_player ?p ?p1)(true (control ?p1)))"));
 			description.add(GdlFactory.create("(<= (smaller ?x ?y)(succ ?x ?y))"));
 			description.add(GdlFactory.create("(<= (smaller ?x ?y)(succ ?x ?z)(smaller ?z ?y))"));
 			description.add(GdlFactory.create("(next_player player1 player2)"));
@@ -132,7 +133,9 @@ public class Test {
 		Test t = new Test ();
 		//t.createCheckers();
 		
-		List <Gdl> game = t.createTicTacToe();
+		//List <Gdl> game = t.createTicTacToe();
+		//List <Gdl> game = t.createConnect3();
+		List <Gdl> game = t.createAsteroids();
 		t.machine.initialize(game);
 		//t.machine.initialize(t.createTicTacToe());
 
@@ -141,13 +144,22 @@ public class Test {
 		System.out.println((t.machine.getRandomNextState(t.machine.getInitialState()).toString()));
 		EvaluationProver p = new EvaluationProver(new HashSet<Gdl>(game));
 		ArrayList<MachineState> randomStates = t.generateRandomStates(10);
-		p.setTrainStates(randomStates);
+		//p.setTrainStates(randomStates);
 
-		p.evaluate(randomStates, t.machine);
+		//p.evaluate(randomStates, t.machine);
 		ArrayList<MachineState> randomStates2 = t.generateRandomStates(10);
+		//p.results(randomStates2, t.machine);
+		p.reorder(randomStates, t.machine);
+		for (Gdl g : p.reorderedGameDescription ){
+			System.out.println(g);
+		}
+		
+		System.out.println();
+		for (GdlRule r : p.scores.keySet()){
+			System.out.println(r.toString() + " " + p.scores.get(r));
+		}
+
 		p.results(randomStates2, t.machine);
-
-
 
 		/*for (MachineState m : randomStates){
 			System.out.println(m.toString());
