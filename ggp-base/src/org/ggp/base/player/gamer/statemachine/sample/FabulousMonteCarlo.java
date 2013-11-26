@@ -163,7 +163,7 @@ final class FabulousMonteCarlo extends SampleGamer {
 	
 	@Override
 	public int getConfidence(){
-		return 0;
+		return confidence;
 	}
 	
 	/**
@@ -201,6 +201,7 @@ final class FabulousMonteCarlo extends SampleGamer {
 				confidence = (int)(root.q_action[role][i] - uct(root.n, root.n_action[role][i]));
 			}
 		}
+		//System.out.println("MonteCarlo: Computed confidence value of " + confidence + " for move with score " + bestScore + ".");
 		if(confidence < MIN_SCORE){
 			confidence = MIN_SCORE;
 		}
