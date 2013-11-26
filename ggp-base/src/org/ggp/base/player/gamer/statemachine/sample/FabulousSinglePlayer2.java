@@ -98,7 +98,7 @@ final class FabulousSinglePlayer2 extends SampleGamer {
 			return 0;
 		}
 		else{
-			return 100;
+			return bestScore;
 		}
 	}
 	

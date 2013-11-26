@@ -40,6 +40,7 @@ public final class FabulousPlayer extends SampleGamer {
 	public void stateMachineMetaGame(long timeout){
 		long total = System.currentTimeMillis();
 		System.out.println();
+		System.out.println("FabulousPlayer playing " + getMatch().getMatchId() + " as " + getRole().getName() + ".");
 		theMachine = getStateMachine();
 		int roles = theMachine.getRoles().size();
 		currentPlayers = new ArrayList<PlayerThread>();
