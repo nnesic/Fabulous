@@ -92,7 +92,13 @@ final class FabulousMultiPlayer2 extends SampleGamer {
 	
 	private Heuristics heuristic;
 	
-
+	private int confidence = 0;
+	
+	@Override
+	public void setMachine(StateMachine m) {
+		theMachine = m;
+	}
+	
 	@Override
 	public void setState(MachineState state){
 		currentState = state;
@@ -103,7 +109,7 @@ final class FabulousMultiPlayer2 extends SampleGamer {
 		timeout -= 1000;
 		this.timeout = timeout;
 		this.turnpoint = ((TIME_DIV - TIME_MULT) * System.currentTimeMillis() + TIME_MULT * timeout) / TIME_DIV;
-		theMachine = getStateMachine();
+		//theMachine = getStateMachine();
 		role = getRole();
 		transposition = new ReferenceMap<MachineState, Tuple>(SOFT, SOFT);
 		transpositionMin = new ReferenceMap <MachineState, Map <Move, Tuple>> (SOFT, SOFT);
@@ -116,17 +122,18 @@ final class FabulousMultiPlayer2 extends SampleGamer {
 
 	@Override
 	public Move stateMachineSelectMove(long timeout) throws TransitionDefinitionException, MoveDefinitionException, GoalDefinitionException{
-		timeout -= 500;
+		timeout -= 1000;
 		this.timeout = timeout;
 		this.turnpoint = 0;
 		prune = false;
 		useHeuristic = true;
 		Move move = minimax(currentState);
-		if(move != null){
-			return move;
-		}
-		System.out.println("Playing random move.");
-		return theMachine.getRandomMove(currentState, role);
+		return move;
+	}
+	
+	@Override
+	public int getConfidence(){
+		return confidence;
 	}
 
 	/**
@@ -176,7 +183,7 @@ final class FabulousMultiPlayer2 extends SampleGamer {
 		Search:
 			while(notDone){
 				if(System.currentTimeMillis() > timeout){
-					System.out.println("Ran out of time!");
+					System.out.println("Minimax ran out of time!");
 					break;
 				}
 				depth++;
@@ -192,7 +199,7 @@ final class FabulousMultiPlayer2 extends SampleGamer {
 					try {
 						tempScore = minPlayer (state, move, minMoves, fabulous, depth, alpha, beta);
 					} catch (TimeoutException e){
-						System.out.println("Ran out of time!");
+						System.out.println("Minimax ran out of time!");
 						notDone = true;
 						break Search;
 					}
@@ -213,6 +220,12 @@ final class FabulousMultiPlayer2 extends SampleGamer {
 					}
 				}
 			}
+		if(notDone){
+			confidence = MIN_SCORE;
+		}
+		else{
+			confidence = bestScore;
+		}
 		if(bestScore != Integer.MIN_VALUE){
 			if(! useHeuristic){
 				heuristic.addValue(heuristic.evaluate_mobility(moves), heuristic.evaluate_novelty(state, seen), heuristic.evaluate_opponentMobility(minMoves), bestScore);
@@ -543,5 +556,5 @@ final class FabulousMultiPlayer2 extends SampleGamer {
 		}
 		
 	}
-
+	
 }

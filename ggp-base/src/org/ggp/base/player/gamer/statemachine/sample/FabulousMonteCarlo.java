@@ -23,7 +23,7 @@ final class FabulousMonteCarlo extends SampleGamer {
 	
 	//private static final int MAX_SCORE = 100;
 	
-	//private static final int MIN_SCORE = 0;
+	private static final int MIN_SCORE = 0;
 	
 	protected static final ReferenceStrength SOFT = AbstractReferenceMap.ReferenceStrength.SOFT;
 	
@@ -43,7 +43,7 @@ final class FabulousMonteCarlo extends SampleGamer {
 		
 		final MachineState state;
 		final List<List<Move>> legal;
-		Map<int[], Node> successors;
+		Map<List<Integer>, Node> successors;
 		int n;
 		int [][] n_action;
 		double [][] q_action;
@@ -71,7 +71,7 @@ final class FabulousMonteCarlo extends SampleGamer {
 				Arrays.fill(n_action[i], 0);
 				Arrays.fill(q_action[i], 0);
 			}
-			successors = new ReferenceMap<int[], Node>(SOFT, SOFT);
+			successors = new ReferenceMap<List<Integer>, Node>(SOFT, SOFT);
 		}
 	}
 	
@@ -100,7 +100,7 @@ final class FabulousMonteCarlo extends SampleGamer {
 		}
 	}
 	
-	protected StateMachine theMachine;
+	//protected StateMachine theMachine;
 	
 	private NonTerminalNode root;
 	
@@ -111,6 +111,15 @@ final class FabulousMonteCarlo extends SampleGamer {
 	private boolean started = false;
 	
 	private int counter;
+	
+	protected StateMachine theMachine;
+	
+	private int confidence = 0;
+	
+	@Override
+	public void setMachine(StateMachine m){
+		theMachine = m;
+	}
 	
 	@Override
 	public void setState(MachineState state){
@@ -135,24 +144,26 @@ final class FabulousMonteCarlo extends SampleGamer {
 	
 	@Override
 	public Move stateMachineSelectMove(long timeout) throws TransitionDefinitionException, MoveDefinitionException, GoalDefinitionException{
-		timeout -= 5000;
+		timeout -= 1000;
 		Move m = mcts(timeout);
-		if(m != null){
-			return m;
-		}
-		System.out.println("Playing random move.");
-		return theMachine.getRandomMove(currentState, theMachine.getRoles().get(role));
+		return m;
 	}
 	
 	@Override
 	public void stateMachineMetaGame(long timeout) throws TransitionDefinitionException, MoveDefinitionException, GoalDefinitionException{
 		started = false;
-		theMachine = getStateMachine();
+		//theMachine = getStateMachine();
 		root = new NonTerminalNode(currentState);
+		//System.out.println(getRole());
 		role = theMachine.getRoleIndices().get(getRole());
-		timeout -= 5000;
+		timeout -= 1000;
 		mcts(timeout);
 		started = true;
+	}
+	
+	@Override
+	public int getConfidence(){
+		return 0;
 	}
 	
 	/**
@@ -182,11 +193,16 @@ final class FabulousMonteCarlo extends SampleGamer {
 		System.out.println("Did " + counter + " MCTS steps.");
 		int best = -1;
 		int bestScore = Integer.MIN_VALUE;
+		confidence = 0;
 		for(int i = 0; i < root.n_action[role].length; i++){
 			if(root.n_action[role][i] > bestScore){
 				bestScore = root.n_action[role][i];
 				best = i;
+				confidence = (int)(root.q_action[role][i] - uct(root.n, root.n_action[role][i]));
 			}
+		}
+		if(confidence < MIN_SCORE){
+			confidence = MIN_SCORE;
 		}
 		return (best == -1) ? null : root.legal.get(role).get(best);
 	}
@@ -200,13 +216,13 @@ final class FabulousMonteCarlo extends SampleGamer {
 	 */
 	private int mctsStep(long timeout){
 		List<NonTerminalNode> path = new ArrayList<NonTerminalNode>();
-		int[] scores;
+		int[] scores = null;
 		Node current = root;
 		NonTerminalNode c = (NonTerminalNode)root;
 		//int rootMove = -1;
 		
 		// Selection
-		List<int[]> select = new ArrayList<int[]>();
+		List<List<Integer>> select = new ArrayList<List<Integer>>();
 		List<Move> selectM = new ArrayList<Move>();
 		while(current != null){
 			if(System.currentTimeMillis() > timeout){
@@ -218,55 +234,62 @@ final class FabulousMonteCarlo extends SampleGamer {
 			}
 			c = (NonTerminalNode)current;
 			path.add(c);
-			select.add(new int[theMachine.getRoles().size()]);
+			List<Integer> selectEntry = new ArrayList<Integer>();
 			selectM = new ArrayList<Move>();
 			for(int p = 0; p < theMachine.getRoles().size(); p++){
 				List<Move> moves = c.legal.get(p);
 				double bestval = Double.NEGATIVE_INFINITY;
-				Move bestmove = null;
-				int bestindex = -1;
-				for(int i = 0; i < moves.size(); i++){
-					Move m = moves.get(i);
-					if(c.n == 0){
-						bestmove = moves.get(0);
-						bestindex = 0;
-						break;
-					}
-					double value = c.q_action[p][i] + uct(c.n, c.n_action[p][i]);
-					//System.out.println("Found a move with score " + value);
-					if(value > bestval){
-						bestval = value;
-						bestmove = m;
-						bestindex = i;
+				Move bestmove;
+				int bestindex;
+				if(c.n == 0){
+					bestmove = moves.get(0);
+					bestindex = 0;
+				}
+				else{
+					bestmove = null;
+					bestindex = -1;
+					for(int i = 0; i < moves.size(); i++){
+						Move m = moves.get(i);
+						double value = c.q_action[p][i] + uct(c.n, c.n_action[p][i]);
+						//System.out.println("Found a move with score " + value);
+						if(value > bestval){
+							bestval = value;
+							bestmove = m;
+							bestindex = i;
+						}
 					}
 				}
-				select.get(select.size() - 1)[p] = bestindex;
+				selectEntry.add(bestindex);
 				selectM.add(bestmove);
 			}
+			select.add(selectEntry);
 			/*
 			if(current == root){
 				rootMove = select.get(select.size() - 1)[role];
 			}
 			*/
-			current = c.successors.get(select);
+			current = c.successors.get(selectEntry);
 		}
 		
 		// Expansion & Playout
-		MachineState next;
-		try {
-			next = theMachine.getNextState(c.state, selectM);
-		} catch (TransitionDefinitionException e) {
-			System.err.println("Could not perform state update.");
-			return -1;
+		if(! (current instanceof TerminalNode)){
+			MachineState next;
+			try {
+				next = theMachine.getNextState(c.state, selectM);
+			} catch (TransitionDefinitionException e) {
+				System.err.println("Could not perform state update.");
+				return -1;
+			}
+			if(theMachine.isTerminal(next)){
+				current = new TerminalNode(next);
+			}
+			else{
+				current = new NonTerminalNode(next);
+			}
+			c.successors.put(select.get(select.size() - 1), current);
+			scores = playout(current, timeout);
 		}
-		if(theMachine.isTerminal(next)){
-			current = new TerminalNode(next);
-		}
-		else{
-			current = new NonTerminalNode(next);
-		}
-		c.successors.put(select.get(select.size() - 1), current);
-		scores = playout(current, timeout);
+		
 		if(scores == null){
 			return -1;
 		}
@@ -276,14 +299,13 @@ final class FabulousMonteCarlo extends SampleGamer {
 			NonTerminalNode node = path.get(i);
 			node.n++;
 			for(int j = 0; j < theMachine.getRoles().size(); j++){
-				node.n_action[j][select.get(i)[j]]++;
-				node.q_action[j][select.get(i)[j]] = (node.q_action[j][select.get(i)[j]] * node.n_action[j][select.get(i)[j]] + scores[i])
-						/ (node.n_action[j][select.get(i)[j]] + 1);
+				node.n_action[j][select.get(i).get(j)]++;
+				node.q_action[j][select.get(i).get(j)] = (node.q_action[j][select.get(i).get(j)] * node.n_action[j][select.get(i).get(j)] + scores[j]) / (node.n_action[j][select.get(i).get(j)] + 1);
 			}
 		}
 		
 		counter++;
-		return select.get(0)[role];
+		return select.get(0).get(role);
 	}
 	
 	/**

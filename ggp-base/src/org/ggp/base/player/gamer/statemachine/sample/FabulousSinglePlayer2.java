@@ -56,6 +56,11 @@ final class FabulousSinglePlayer2 extends SampleGamer {
 	private boolean foundSolution = false;
 	
 	@Override
+	public void setMachine(StateMachine m) {
+		theMachine = m;
+	}
+	
+	@Override
 	public void setState(MachineState state){
 		currentState = state;
 	}
@@ -70,8 +75,7 @@ final class FabulousSinglePlayer2 extends SampleGamer {
 			//return getStateMachine().getRandomMove(getCurrentState(), getRole());
 		}
 		if(best == null || best.isEmpty()){
-			System.out.println("playing random");
-			return getStateMachine().getRandomMove(currentState, getRole());
+			return null;
 		}
 		return best.removeFirst();
 	}
@@ -83,9 +87,19 @@ final class FabulousSinglePlayer2 extends SampleGamer {
 		foundSolution = false;
 		completed = new ReferenceMap<MachineState, Boolean>(soft, soft);
 		seen = new ReferenceMap<MachineState, Integer>(soft, soft);
-		theMachine = getStateMachine();
-		heuristic = new Heuristics( theMachine);
+		//theMachine = getStateMachine();
+		heuristic = new Heuristics(theMachine);
 		upperSearch(theMachine, theMachine.getInitialState(), timeout);
+	}
+	
+	@Override
+	public int getConfidence() {
+		if(best == null || best.isEmpty()){
+			return 0;
+		}
+		else{
+			return 100;
+		}
 	}
 	
 	/**

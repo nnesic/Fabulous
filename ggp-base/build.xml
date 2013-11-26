@@ -105,6 +105,7 @@
     </target>
     <target name="Player">
         <java classname="org.ggp.base.apps.player.Player" failonerror="true" fork="yes">
+        		<jvmarg line="-Xmx2048m"/>
             <classpath refid="GGP_Base.classpath"/>
         </java>
     </target>
